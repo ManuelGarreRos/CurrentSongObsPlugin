@@ -15,7 +15,7 @@ console.log(`WebSocket server started on ws://localhost:${PORT}`);
 
 wss.on('connection', (ws, req) => {
     const clientType = req.headers['user-agent']?.includes('Chrome') ? 'Browser Extension' : 'OBS Display';
-    console.log(`📡 Client connected: ${clientType}`);
+    console.log(`Client connected: ${clientType}`);
     
     clients.add(ws);
 

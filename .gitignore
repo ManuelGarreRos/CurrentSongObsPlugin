@@ -21,6 +21,7 @@ backend/migrations/CIRPA_TO_ESFERA/node_modules
 
 # js
 node_modules
+package-lock.json
 /frontend/.pnp
 .pnp.js
 /frontend/.eslintcache

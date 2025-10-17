@@ -1,276 +1,409 @@
-# Current Video OBS - Browser Source Version
+# WebSocket Server & OBS Display
 
-**⚡ NO COMPILATION NEEDED! ⚡**
+WebSocket server that bridges browser extension and OBS Studio browser source for real-time video information display.
 
-This is the simpler version that uses OBS's built-in Browser Source instead of a C++ plugin.
+## Overview
 
-## Why This Version?
+This server receives video information from the browser extension via WebSocket and relays it to the OBS browser source display. It serves both as a WebSocket relay server and an HTTP server for the browser source HTML file.
 
-- ✅ **No C++ compilation required**
-- ✅ **No OBS SDK needed**
-- ✅ **Works on Windows, Mac, and Linux**
-- ✅ **Easier to install and maintain**
-- ✅ **Beautiful animated UI**
-- ✅ **Same functionality as the plugin version**
+## Features
 
-## Requirements
-
-- OBS Studio (any recent version)
-- Node.js 14+ (https://nodejs.org/)
-- Chrome/Edge browser
-- The browser extension (in `../browser-extension`)
+- 🔌 **WebSocket server** - Relays messages between extension and OBS (port 8765)
+- 🌐 **HTTP server** - Serves the OBS browser source display (port 8008)
+- 🔄 **Multi-client support** - Handles multiple simultaneous connections
+- 📡 **Message broadcasting** - Forwards messages between all connected clients
+- 💾 **State preservation** - Caches current video data for new connections
+- 🎨 **Beautiful animated UI** - Rotating vinyl-style thumbnail with glow effects
+- 🎼 **Interactive playlist** - Searchable playlist with click-to-play
 
 ## Installation
 
-### Step 1: Install Node.js
-
-Download and install from https://nodejs.org/  
-Choose the LTS (Long Term Support) version.
-
-Verify installation:
 ```bash
-node --version
-npm --version
-```
-
-### Step 2: Install Dependencies
-
-```bash
-cd browser-source-version
 npm install
 ```
 
-### Step 3: Start the WebSocket Server
+Dependencies:
+- `ws` (v8.14.0) - WebSocket server implementation
+
+## Usage
+
+### Start Server
 
 ```bash
 npm start
 ```
 
-You should see:
+Output:
 ```
-✅ WebSocket server started on ws://localhost:8765
-🌐 HTTP server started on http://localhost:8080
+WebSocket server started on ws://localhost:8765
+HTTP server started on http://localhost:8008
 
-📋 Instructions:
+Instructions:
    1. Add a Browser Source in OBS
-   2. Set URL to: http://localhost:8080
-   3. Set Width: 800, Height: 200
+   2. Set URL to: http://localhost:8008
+   3. Set Width: 400, Height: 340
    4. Install and enable the browser extension
    5. Play a video in your browser
 ```
 
-**Keep this terminal window open!** The server needs to run while using OBS.
+### Windows Batch Scripts
 
-### Step 4: Add Browser Source in OBS
-
-1. Open **OBS Studio**
-2. In the **Sources** panel, click **+**
-3. Select **Browser Source**
-4. Name it "Current Video" and click **OK**
-5. In the properties:
-   - **URL:** `http://localhost:8080`
-   - **Width:** `800`
-   - **Height:** `200`
-   - **FPS:** `30`
-   - ✅ Check "Shutdown source when not visible"
-   - ✅ Check "Refresh browser when scene becomes active"
-6. Click **OK**
-
-### Step 5: Install Browser Extension
-
-1. Open **Chrome** or **Edge**
-2. Go to `chrome://extensions/`
-3. Enable **"Developer mode"** (toggle in top-right)
-4. Click **"Load unpacked"**
-5. Navigate to and select the `browser-extension` folder (one level up)
-6. Extension should appear in your toolbar
-
-### Step 6: Test It!
-
-1. Make sure the WebSocket server is running (`npm start`)
-2. Go to **YouTube** and play a video
-3. Check **OBS** - the video info should appear!
-
-## Usage
-
-### Starting the Server
-
-**Method 1: Command Line**
-```bash
-cd browser-source-version
-npm start
-```
-
-**Method 2: Double-click (Windows)**
-Create `start-server.bat`:
+**Start server (visible):**
 ```batch
-@echo off
-cd /d "%~dp0"
-npm start
-pause
+start-server.bat
 ```
 
-**Method 3: Double-click (Mac/Linux)**
-Create `start-server.sh`:
-```bash
-#!/bin/bash
-cd "$(dirname "$0")"
-npm start
+**Start server (hidden):**
+```batch
+start-server-hidden.vbs
 ```
-Make executable: `chmod +x start-server.sh`
 
-### Auto-start with Windows
+**Stop server:**
+```batch
+stop-server.bat
+```
+
+### Auto-start on Windows Boot
 
 1. Press `Win+R`, type `shell:startup`, press Enter
-2. Create shortcut to `start-server.bat`
-3. Server will start automatically when Windows starts
+2. Create shortcut to `start-server-hidden.vbs`
+3. Server starts automatically on login
 
-## Customization
+## OBS Configuration
 
-### Change Colors
+### Add Browser Source
 
-Edit `video-display.html` and modify the CSS:
+1. Open **OBS Studio**
+2. In Sources panel, click **+** → **Browser Source**
+3. Configure:
+   - **Name:** "Current Video"
+   - **URL:** `http://localhost:8008`
+   - **Width:** `400`
+   - **Height:** `340`
+   - **FPS:** `30` (or lower for better performance)
+   - ✅ **Shutdown source when not visible**
+   - ✅ **Refresh browser when scene becomes active**
 
-```css
-/* Background gradient */
-.container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+### Recommended Settings
 
-/* Progress bar color */
-.progress-fill {
-    background: linear-gradient(90deg, #00ff88 0%, #00cc6a 100%);
-}
-```
+**Performance optimization:**
+- Width: 400, Height: 340 (default)
+- FPS: 15-30 (lower = less CPU usage)
+- Enable "Shutdown source when not visible"
 
-### Change Size
+**For larger displays:**
+- Width: 600, Height: 510 (1.5x scale)
+- Width: 800, Height: 680 (2x scale)
 
-In OBS Browser Source properties:
-- **Small:** 600 x 150
-- **Medium:** 800 x 200 (default)
-- **Large:** 1000 x 250
+## Configuration
 
 ### Change Ports
 
-Edit `websocket-server.js`:
+Edit `websocket-server.js` lines 6-7:
 ```javascript
 const PORT = 8765;       // WebSocket port
-const HTTP_PORT = 8080;  // HTTP server port
+const HTTP_PORT = 8008;  // HTTP server port
 ```
 
-Then update:
-- OBS Browser Source URL
-- Browser extension `background.js` WebSocket URL
+**After changing ports, update:**
+1. Chrome extension: `chrome-extension/background.js` line 13
+2. OBS Browser Source URL: `http://localhost:NEW_PORT`
+3. Display HTML: `video-display.html` line 514
+
+### Remote Access
+
+To access from another computer on your network:
+
+1. Edit `websocket-server.js`:
+```javascript
+const wss = new WebSocket.Server({ 
+    host: '0.0.0.0',  // Listen on all network interfaces
+    port: PORT 
+});
+```
+
+2. Update extension WebSocket URL to your PC's IP:
+```javascript
+ws = new WebSocket('ws://192.168.1.100:8765');
+```
+
+3. Configure firewall to allow ports 8765 and 8008
+
+## Architecture
+
+### WebSocket Server (`websocket-server.js`)
+
+```javascript
+// Handles two types of clients:
+// 1. Browser Extension - Sends video data
+// 2. OBS Display - Receives and displays video data
+
+// Message flow:
+Extension → Server → OBS Display
+OBS Display → Server → Extension  // For playlist navigation
+```
+
+**Key features:**
+- Tracks all connected clients in a Set
+- Identifies client type by User-Agent header
+- Stores `currentVideoData` for late-joining clients
+- Broadcasts messages to all clients except sender
+- Handles graceful shutdown on SIGINT (Ctrl+C)
+
+### HTTP Server
+
+Simple HTTP server that:
+- Serves `video-display.html` on `http://localhost:8008`
+- Adds CORS headers for cross-origin access
+- Returns 404 for any other path
+
+### Display UI (`video-display.html`)
+
+**Layout:**
+```
+┌─────────────────────────┐
+│   [Rotating Vinyl]      │  ← Animated thumbnail
+│                         │
+│  ┌───────────────────┐  │
+│  │ 🔍 Song Title     │  │  ← Search icon (if playlist)
+│  │    Artist Name    │  │
+│  │ ─────────────────│  │  ← Progress bar
+│  │ 0:45      3:00    │  │  ← Time display
+│  └───────────────────┘  │
+│                         │
+│  ┌─────────────────┐    │  ← Playlist panel (hidden)
+│  │ Playlist (50) [✕]│   │
+│  │ 🔍 Search...     │   │
+│  │ ▶ Song 1         │   │
+│  │   Song 2         │   │
+│  │   Song 3         │   │
+│  └─────────────────┘    │
+└─────────────────────────┘
+```
+
+**Features:**
+- Rotating vinyl-style thumbnail with glow effects
+- Smooth animations and transitions
+- Smart song/artist parsing
+- Real-time progress bar
+- Interactive playlist with search
+- Click-to-play any song
+- Auto-reconnection on disconnect
+
+## Message Protocol
+
+### Extension → Server → Display
+
+**Video update:**
+```javascript
+{
+    title: "Artist - Song Title",
+    songTitle: "Song Title",
+    artist: "Artist Name",
+    thumbnail: "https://...",
+    currentTime: 45.2,
+    duration: 180.5,
+    progress: 25.04,
+    playing: true,
+    url: "https://youtube.com/...",
+    site: "YouTube",
+    playlist: {
+        playlistId: "PLxxxxxx",
+        items: [{
+            index: 0,
+            videoId: "dQw4w9WgXcQ",
+            title: "Song Title",
+            url: "https://...",
+            isCurrent: true
+        }],
+        count: 50
+    }
+}
+```
+
+**Video stopped:**
+```javascript
+{
+    type: 'stopped'
+}
+```
+
+### Display → Server → Extension
+
+**Navigate playlist:**
+```javascript
+{
+    type: 'NAVIGATE_PLAYLIST',
+    data: { direction: 'next' | 'prev' }
+}
+```
+
+**Play specific video:**
+```javascript
+{
+    type: 'PLAY_VIDEO',
+    data: {
+        videoId: "dQw4w9WgXcQ",
+        url: "https://youtube.com/watch?v=..."
+    }
+}
+```
+
+**Request full playlist:**
+```javascript
+{
+    type: 'LOAD_FULL_PLAYLIST'
+}
+```
+
+## Display Customization
+
+### Change Colors
+
+Edit `video-display.html` CSS:
+
+```css
+/* Progress bar color */
+.progress-fill {
+    background: linear-gradient(90deg, #a78bfa 0%, #8b5cf6 100%);
+}
+
+/* Playlist border color */
+.playlist-panel {
+    border: 2px solid rgba(167, 139, 250, 0.6);
+}
+
+/* Glow effect */
+.thumbnail-wrapper::after {
+    box-shadow: 
+        inset 0 0 30px rgba(167, 139, 250, 0.22),
+        0 0 40px rgba(139, 92, 246, 0.27);
+}
+```
+
+### Change Animations
+
+```css
+/* Rotation speed */
+@keyframes rotate-thumbnail {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.thumbnail-wrapper {
+    animation: rotate-thumbnail 20s linear infinite;  /* Change 20s */
+}
+```
+
+### Remove Playlist Feature
+
+In `video-display.html`, add:
+```css
+.playlist-icon, .playlist-panel {
+    display: none !important;
+}
+```
 
 ## Troubleshooting
 
-### ❌ "Cannot find module 'ws'"
+### Port Already in Use
 
-**Solution:**
+**Error:** `EADDRINUSE: address already in use`
+
+**Find what's using the port:**
 ```bash
-cd browser-source-version
-npm install
-```
-
-### ❌ "Address already in use"
-
-Port 8765 or 8080 is already used by another program.
-
-**Solution 1:** Close the other program
-**Solution 2:** Change ports (see Customization above)
-
-To find what's using the port (Windows):
-```bash
+# Windows
 netstat -ano | findstr :8765
-netstat -ano | findstr :8080
+netstat -ano | findstr :8008
+
+# Mac/Linux
+lsof -i :8765
+lsof -i :8008
 ```
 
-### ❌ Browser source shows "Connection Error"
+**Solutions:**
+1. Close the conflicting application
+2. Change ports in configuration
 
-**Solution:**
-1. Make sure WebSocket server is running
+### OBS Shows "Connection Error"
+
+**Causes:**
+- WebSocket server not running
+- Firewall blocking connection
+- Wrong URL in browser source
+
+**Solutions:**
+1. Verify server is running: `npm start`
 2. Check terminal for errors
-3. Try restarting the server
-4. Refresh the browser source in OBS (right-click → Refresh)
+3. Restart server
+4. Right-click browser source → Refresh
+5. Check firewall settings
 
-### ❌ Extension shows "Not connected to OBS"
+### Display Not Updating
 
-**Solution:**
-1. Ensure WebSocket server is running
-2. Check that port 8765 is correct
-3. Restart browser
-4. Check Windows Firewall isn't blocking Node.js
+**Causes:**
+- Extension not connected
+- WebSocket connection broken
+- CORS issues
 
-### ❌ Video playing but not showing in OBS
-
-**Solution:**
-1. Check browser console (F12) for errors
-2. Click extension icon - should show "Connected"
-3. Restart WebSocket server
+**Solutions:**
+1. Check extension popup shows "Connected"
+2. Check browser console (F12) for errors
+3. Restart both server and extension
 4. Refresh OBS browser source
 
-## Features
+### High CPU Usage
 
-### Current Features
-- ✨ Real-time video detection
-- 📺 Support for YouTube, Vimeo, Twitch, etc.
-- 🎨 Beautiful animated UI
-- 📊 Live progress bar
-- 🖼️ Video thumbnails
-- 🔄 Auto-reconnection
-- 💚 Connection status indicator
+**Causes:**
+- Browser source FPS too high
+- Complex animations
+- Multiple visible instances
 
-### Display Shows:
-- Video title
-- Thumbnail image
-- Current time / Duration
-- Progress bar with percentage
-- Video platform (YouTube, Vimeo, etc.)
-- Connection status
-
-## Comparison: Browser Source vs C++ Plugin
-
-| Feature | Browser Source | C++ Plugin |
-|---------|---------------|-----------|
-| Installation | ⚡ Easy | 😰 Complex |
-| Compilation | ❌ Not needed | ✅ Required |
-| Cross-platform | ✅ Yes | ❌ Windows only |
-| OBS SDK | ❌ Not needed | ✅ Required |
-| Customization | ⚡ Easy (HTML/CSS) | 😰 Hard (C++) |
-| Performance | 💚 Good | 💚 Excellent |
-| Resource usage | ~50MB RAM | ~5MB RAM |
-
-**Recommendation:** Use Browser Source version unless you need absolute minimum resource usage.
+**Solutions:**
+1. Lower FPS in OBS browser source (15-30 instead of 60)
+2. Enable "Shutdown source when not visible"
+3. Reduce animation complexity in CSS
 
 ## Performance Tips
 
-1. **Lower FPS in OBS:** Set Browser Source FPS to 15-30 instead of 60
-2. **Hide when not visible:** Enable "Shutdown source when not visible"
-3. **Smaller size:** Use 600x150 instead of 800x200 if possible
+1. **Lower FPS:** Set OBS Browser Source FPS to 15-30
+2. **Hide when not visible:** Enable in browser source properties
+3. **Smaller size:** Use 400×340 instead of larger dimensions
+4. **Disable unused features:** Comment out playlist code if not needed
 
 ## Development
 
-### Running in Development
+### Enable Debug Logging
 
-```bash
-cd browser-source-version
-node websocket-server.js
+Add to `websocket-server.js`:
+```javascript
+const DEBUG = true;
+
+wss.on('connection', (ws, req) => {
+    if (DEBUG) console.log('Headers:', req.headers);
+});
+
+ws.on('message', (data) => {
+    if (DEBUG) console.log('Raw message:', data.toString());
+});
 ```
 
-### Testing Locally
+### Test Display Without OBS
 
 Open `video-display.html` directly in browser:
 ```
-file:///path/to/browser-source-version/video-display.html
+file:///path/to/video-display.html
 ```
 
-Use browser console to manually send test data:
+Send test data via browser console:
 ```javascript
-ws = new WebSocket('ws://localhost:8765');
+const ws = new WebSocket('ws://localhost:8765');
 ws.onopen = () => {
     ws.send(JSON.stringify({
-        title: "Test Video",
-        thumbnail: "https://via.placeholder.com/150",
+        title: "Test Artist - Test Song",
+        songTitle: "Test Song",
+        artist: "Test Artist",
+        thumbnail: "https://via.placeholder.com/300",
         currentTime: 45,
         duration: 180,
         progress: 25,
@@ -280,59 +413,28 @@ ws.onopen = () => {
 };
 ```
 
-### Debugging
+## File Structure
 
-Enable debug logging in `websocket-server.js`:
-```javascript
-const DEBUG = true;
-
-// Add logging
-if (DEBUG) console.log('Debug info:', data);
+```
+web-server/
+├── websocket-server.js        # WebSocket relay server
+├── video-display.html         # OBS browser source UI
+├── package.json               # Dependencies and scripts
+├── start-server.bat          # Windows start script (visible)
+├── start-server-hidden.vbs   # Windows start script (hidden)
+├── stop-server.bat           # Windows stop script
+├── PLAYLIST_FEATURE.md       # Playlist implementation docs
+└── README.md                 # This file
 ```
 
-## Advanced Usage
+## License
 
-### Multiple Displays
+MIT License - See package.json for details
 
-You can create multiple browser sources with different styles:
+## Credits
 
-1. Copy `video-display.html` to `video-display-compact.html`
-2. Modify the CSS for compact view
-3. Add different browser sources pointing to different files
+**Author:** MGRDesarrollo - Manuel Garre Ros
 
-### Remote Access
+---
 
-To access from another computer on your network:
-
-1. Edit `websocket-server.js`:
-```javascript
-const wss = new WebSocket.Server({ 
-    host: '0.0.0.0',  // Listen on all interfaces
-    port: PORT 
-});
-```
-
-2. Update browser extension to use your PC's IP:
-```javascript
-// In background.js
-ws = new WebSocket('ws://192.168.1.100:8765');
-```
-
-3. Configure firewall to allow ports 8765 and 8080
-
-## Support
-
-- **Documentation:** See main README.md
-- **Issues:** GitHub Issues
-- **Questions:** GitHub Discussions
-
-## Next Steps
-
-- [X] Install Node.js
-- [X] Run `npm install`
-- [X] Run `npm start`
-- [X] Add Browser Source to OBS
-- [X] Install browser extension
-- [X] Test with YouTube video
-
-**Enjoy streaming! 🎥✨**
+*This README was written by Claude, an AI assistant by Anthropic.*
