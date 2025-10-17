@@ -1,0 +1,21 @@
+{
+  "name": "current-video-obs-browser-source",
+  "version": "1.0.0",
+  "description": "WebSocket server for Current Video OBS - Browser Source Version",
+  "main": "websocket-server.js",
+  "scripts": {
+    "start": "node websocket-server.js",
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [
+    "obs",
+    "websocket",
+    "video",
+    "streaming"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.0"
+  }
+}

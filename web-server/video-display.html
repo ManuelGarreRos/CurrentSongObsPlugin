@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current Video Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 400px;
+            height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding-top: 20px;
+        }
+
+        .no-video {
+            display: none;
+        }
+
+        .video-info {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .video-info.active {
+            display: flex;
+        }
+
+        .thumbnail-container {
+            position: relative;
+        }
+
+        .thumbnail {
+            width: 160px;
+            height: 140px;
+            border-radius: 20%;
+            object-fit: cover;
+            object-position: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .thumbnail-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            animation: rotate-thumbnail 20s linear infinite;
+        }
+
+        .thumbnail-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.19) 0%, transparent 30%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.32) 0%, transparent 30%),
+                radial-gradient(circle at 50% 50%, rgba(196, 181, 253, 0.19) 0%, transparent 40%);
+            animation: smoke-move 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 2;
+            mix-blend-mode: screen;
+        }
+
+        .thumbnail-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            box-shadow: 
+                inset 0 0 30px rgba(167, 139, 250, 0.22),
+                0 0 40px rgba(139, 92, 246, 0.27),
+                0 0 60px rgba(167, 139, 250, 0.17);
+            pointer-events: none;
+            z-index: 3;
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+        
+        .thumbnail-wrapper .thumbnail {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            border: none;
+            transform: scale(1.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes rotate-thumbnail {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .info-card {
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 250px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 2px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 230px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .artist {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.75);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 230px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 10px;
+        }
+
+        .meta {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .site {
+            color: rgba(255, 255, 255, 0.8);
+            visibility: hidden;
+        }
+
+        .progress-container {
+            width: 100%;
+            margin-top: 0;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a78bfa 0%, #8b5cf6 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(167, 139, 250, 0.6);
+        }
+
+        .progress-text {
+            display: none;
+        }
+
+        .playlist-icon {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            z-index: 10;
+            filter: drop-shadow(0 0 3px rgba(167, 139, 250, 0.8));
+        }
+
+        .playlist-icon.show {
+            display: flex;
+        }
+
+        .playlist-icon:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 8px rgba(167, 139, 250, 1));
+        }
+
+        .playlist-icon:active {
+            transform: scale(0.95);
+        }
+
+        .playlist-panel {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px) scaleY(0);
+            transform-origin: top center;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid rgba(167, 139, 250, 0.6);
+            border-radius: 15px;
+            padding: 20px;
+            width: 350px;
+            max-height: 500px;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .playlist-panel.show {
+            transform: translateX(-50%) translateY(10px) scaleY(1);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(167, 139, 250, 0.3);
+        }
+
+        .playlist-header h3 {
+            color: white;
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .close-btn {
+            background: rgba(255, 68, 68, 0.3);
+            border: 2px solid rgba(255, 68, 68, 0.5);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 68, 68, 0.5);
+            transform: scale(1.1);
+        }
+
+        .playlist-search {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .playlist-search::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .playlist-search:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(167, 139, 250, 0.8);
+            box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+        }
+
+        .playlist-items {
+            overflow-y: auto;
+            max-height: 400px;
+            padding-right: 10px;
+        }
+
+        .playlist-items::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .playlist-items::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .playlist-items::-webkit-scrollbar-thumb {
+            background: rgba(167, 139, 250, 0.5);
+            border-radius: 4px;
+        }
+
+        .playlist-items::-webkit-scrollbar-thumb:hover {
+            background: rgba(167, 139, 250, 0.7);
+        }
+
+        .playlist-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .playlist-item:hover {
+            background: rgba(167, 139, 250, 0.2);
+            border-color: rgba(167, 139, 250, 0.5);
+            transform: translateX(5px);
+        }
+
+        .playlist-item.current {
+            background: rgba(167, 139, 250, 0.3);
+            border-color: rgba(167, 139, 250, 0.8);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
+        }
+
+        .playlist-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .playlist-item-index {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .status-indicator {
+            display: none;
+        }
+
+        .connection-status {
+            display: none;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 2px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .artist {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.75);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 8px;
+        }
+
+        .meta {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .site {
+            color: rgba(255, 255, 255, 0.8);
+            visibility: hidden;
+        }
+
+        .meta {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .site {
+            color: rgba(255, 255, 255, 0.8);
+            visibility: hidden;
+        }
+
+
+
+        .status-indicator {
+            display: none;
+        }
+
+        .connection-status {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-indicator" id="statusIndicator"></div>
+        
+        <div class="no-video" id="noVideo"></div>
+
+        <div class="video-info" id="videoInfo">
+            <div class="thumbnail-container">
+                <div class="thumbnail-wrapper">
+                    <img id="thumbnail" class="thumbnail" alt="Video thumbnail">
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="playlist-icon" id="playlistIcon" onclick="togglePlaylist()">🔍</div>
+                
+                <div class="title" id="title">Song Title</div>
+                <div class="artist" id="artist">Artist Name</div>
+                
+                <div class="progress-container">
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="playlist-panel" id="playlistPanel">
+            <div class="playlist-header">
+                <h3>Playlist (<span id="playlistCount">0</span>)</h3>
+                <button class="close-btn" onclick="togglePlaylist()">✕</button>
+            </div>
+            <input 
+                type="text" 
+                class="playlist-search" 
+                id="playlistSearch" 
+                placeholder="🔍 Search songs..."
+                oninput="filterPlaylist()"
+            >
+            <div class="playlist-items" id="playlistItems">
+                <div style="color: rgba(255,255,255,0.5); text-align: center; padding: 20px;">
+                    No playlist detected
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-status" id="connectionStatus">Connecting...</div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8765');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const noVideo = document.getElementById('noVideo');
+        const videoInfo = document.getElementById('videoInfo');
+        const thumbnail = document.getElementById('thumbnail');
+        const title = document.getElementById('title');
+        const artist = document.getElementById('artist');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const playlistPanel = document.getElementById('playlistPanel');
+        const playlistIcon = document.getElementById('playlistIcon');
+        const playlistItems = document.getElementById('playlistItems');
+        const playlistCount = document.getElementById('playlistCount');
+
+        let reconnectInterval = null;
+        let hasDisplayedVideo = false;
+        let currentPlaylist = null;
+        let playlistUpdateInterval = null;
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function parseSongInfo(rawTitle) {
+            let songTitle = rawTitle;
+            let artist = '';
+            
+            let cleanTitle = rawTitle
+                .replace(/^\s*\[MV\]\s*/gi, '')
+                .replace(/^\s*\[Official.*?\]\s*/gi, '')
+                .replace(/^\s*\(Official.*?\)\s*/gi, '')
+                .replace(/\s*Official\s+(Music\s+)?Video/gi, '')
+                .replace(/\s*MV\s*$/gi, '')
+                .replace(/\s*M\/V\s*$/gi, '')
+                .trim();
+            
+            const patterns = [
+                /^(.+?)\s*_\s*(.+?)$/,
+                /^(.+?)\s*-\s*(.+?)$/,
+                /^(.+?)\s*by\s+(.+?)$/i,
+                /^(.+?)\s*\|\s*(.+?)$/,
+                /^(.+?)\s*・\s*(.+?)$/,
+                /(.+?)\s*『(.+?)』/,
+                /^(.+?)\s+["'](.+?)["']$/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = cleanTitle.match(pattern);
+                if (match) {
+                    artist = match[1].trim();
+                    songTitle = match[2].trim();
+                    
+                    artist = artist.replace(/\s*\([^)]*\)/g, '').trim();
+                    artist = artist.replace(/\s*\[[^\]]*\]/g, '').trim();
+                    artist = artist.replace(/\s*【[^】]*】/g, '').trim();
+                    
+                    songTitle = songTitle.replace(/\s*\([^)]*\)/g, '').trim();
+                    songTitle = songTitle.replace(/\s*\[[^\]]*\]/g, '').trim();
+                    songTitle = songTitle.replace(/\s*【[^】]*】/g, '').trim();
+                    songTitle = songTitle.replace(/\s*Lyrics?$/gi, '').trim();
+                    songTitle = songTitle.replace(/\s*Audio$/gi, '').trim();
+                    
+                    break;
+                }
+            }
+            
+            if (!artist) {
+                artist = cleanTitle;
+                songTitle = cleanTitle;
+            }
+
+            console.log(`Parsed Title: "${songTitle}", Artist: "${artist}"`);
+            
+            return { songTitle, artist };
+        }
+
+        function updateDisplay(data) {
+            if (data.type === 'stopped' || !data.playing) {
+                if (!hasDisplayedVideo) {
+                    noVideo.style.display = 'flex';
+                    videoInfo.classList.remove('active');
+                }
+                return;
+            }
+
+            hasDisplayedVideo = true;
+            noVideo.style.display = 'none';
+            videoInfo.classList.add('active');
+
+            const rawTitle = data.title || 'Unknown Title';
+            const { songTitle, artist: parsedArtist } = parseSongInfo(rawTitle);
+            
+            title.textContent = songTitle;
+            artist.textContent = parsedArtist;
+            
+            if (data.thumbnail) {
+                thumbnail.src = data.thumbnail;
+                thumbnail.style.display = 'block';
+            } else {
+                thumbnail.style.display = 'none';
+            }
+
+            currentTimeEl.textContent = formatTime(data.currentTime || 0);
+            durationEl.textContent = formatTime(data.duration || 0);
+
+            const progress = data.progress || 0;
+            progressFill.style.width = progress + '%';
+            progressText.textContent = Math.round(progress) + '%';
+
+            if (data.playlist) {
+                updatePlaylist(data.playlist);
+            }
+        }
+
+        function updatePlaylist(playlist) {
+            if (!playlist || !playlist.items || playlist.items.length === 0) {
+                playlistIcon.classList.remove('show');
+                currentPlaylist = null;
+                if (playlistUpdateInterval) {
+                    clearInterval(playlistUpdateInterval);
+                    playlistUpdateInterval = null;
+                }
+                return;
+            }
+
+            const playlistChanged = !currentPlaylist || 
+                currentPlaylist.count !== playlist.count ||
+                JSON.stringify(currentPlaylist.items.map(i => i.videoId)) !== JSON.stringify(playlist.items.map(i => i.videoId));
+
+            currentPlaylist = playlist;
+            playlistIcon.classList.add('show');
+            playlistCount.textContent = playlist.count;
+
+            if (playlistChanged) {
+                console.log(`📋 Playlist updated: ${playlist.count} songs`);
+                const searchInput = document.getElementById('playlistSearch');
+                renderPlaylistItems(searchInput ? searchInput.value : '');
+            }
+            
+            if (!playlistUpdateInterval) {
+                playlistUpdateInterval = setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            type: 'LOAD_FULL_PLAYLIST'
+                        }));
+                    }
+                }, 5000);
+            }
+        }
+
+        function renderPlaylistItems(filterText = '') {
+            if (!currentPlaylist) return;
+
+            playlistItems.innerHTML = '';
+            const filter = filterText.toLowerCase();
+
+            let filteredItems = currentPlaylist.items;
+            if (filter) {
+                filteredItems = currentPlaylist.items.filter(item => {
+                    const titleMatch = item.title.toLowerCase().includes(filter);
+                    const indexMatch = String(item.index + 1).includes(filter);
+                    return titleMatch || indexMatch;
+                });
+            }
+
+            if (filteredItems.length === 0) {
+                playlistItems.innerHTML = '<div style="color: rgba(255,255,255,0.5); text-align: center; padding: 20px;">No songs match your search</div>';
+                return;
+            }
+
+            filteredItems.forEach((item) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'playlist-item' + (item.isCurrent ? ' current' : '');
+                itemEl.onclick = () => playVideo(item);
+                
+                itemEl.innerHTML = `
+                    <div class="playlist-item-title">${item.isCurrent ? '▶ ' : ''}${item.title}</div>
+                    <div class="playlist-item-index">#${item.index + 1}</div>
+                `;
+                
+                playlistItems.appendChild(itemEl);
+            });
+        }
+
+        function filterPlaylist() {
+            const searchInput = document.getElementById('playlistSearch');
+            renderPlaylistItems(searchInput.value);
+        }
+
+        function togglePlaylist() {
+            playlistPanel.classList.toggle('show');
+            
+            if (playlistPanel.classList.contains('show')) {
+                document.getElementById('playlistSearch').value = '';
+                renderPlaylistItems();
+            }
+        }
+
+        function playVideo(item) {
+            console.log('Playing video:', item);
+            document.getElementById('playlistSearch').value = '';
+            renderPlaylistItems();
+            togglePlaylist();
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'PLAY_VIDEO',
+                    data: {
+                        videoId: item.videoId,
+                        url: item.url
+                    }
+                }));
+            }
+        }
+
+        ws.onopen = () => {
+            console.log('Connected to server');
+            statusIndicator.classList.remove('disconnected');
+            connectionStatus.textContent = 'Connected';
+            
+            if (reconnectInterval) {
+                clearInterval(reconnectInterval);
+                reconnectInterval = null;
+            }
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                updateDisplay(data);
+            } catch (error) {
+                console.error('Error parsing message:', error);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from server');
+            statusIndicator.classList.add('disconnected');
+            connectionStatus.textContent = 'Disconnected';
+            
+            if (!reconnectInterval) {
+                reconnectInterval = setInterval(() => {
+                    location.reload();
+                }, 5000);
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            statusIndicator.classList.add('disconnected');
+            connectionStatus.textContent = 'Connection Error';
+        };
+    </script>
+</body>
+</html>

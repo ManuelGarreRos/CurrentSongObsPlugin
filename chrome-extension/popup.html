@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 300px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .video-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Current Video for OBS</h2>
+    <div id="status" class="status disconnected">
+        Checking connection...
+    </div>
+    <div class="info">
+        <p>This extension sends currently playing video information to OBS Studio.</p>
+        <p><strong>Make sure:</strong></p>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+            <li>OBS is running</li>
+            <li>Current Video plugin is installed</li>
+        </ul>
+    </div>
+    <div id="videoInfo" class="video-info" style="display: none;">
+        <strong>Current Video:</strong><br>
+        <span id="videoTitle">No video playing</span>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
