@@ -109,7 +109,7 @@ function mergePlaylistData(newPlaylist) {
     if (!newPlaylist || !newPlaylist.playlistId) return null;
     
     if (lastPlaylistId && lastPlaylistId !== newPlaylist.playlistId) {
-        console.log(`🔄 New playlist detected, clearing cache`);
+        console.log(`New playlist detected, clearing cache`);
         cachedPlaylistItems.clear();
     }
     lastPlaylistId = newPlaylist.playlistId;
@@ -136,9 +136,9 @@ function mergePlaylistData(newPlaylist) {
     if (currentItem) currentItem.isCurrent = true;
     
     if (newItemsAdded > 0) {
-        console.log(`✨ Added ${newItemsAdded} new songs! Total cache: ${cachedForThisPlaylist.length}`);
+        console.log(`Added ${newItemsAdded} new songs. Total cache: ${cachedForThisPlaylist.length}`);
     }
-    console.log(`📦 Background cache: ${cachedForThisPlaylist.length} songs`);
+    console.log(`Background cache: ${cachedForThisPlaylist.length} songs`);
     
     return {
         playlistId: newPlaylist.playlistId,

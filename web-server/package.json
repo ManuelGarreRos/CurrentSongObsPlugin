@@ -13,7 +13,7 @@
     "video",
     "streaming"
   ],
-  "author": "",
+  "author": "MGRDesarrollo - Manuel Garre Ros",
   "license": "MIT",
   "dependencies": {
     "ws": "^8.14.0"

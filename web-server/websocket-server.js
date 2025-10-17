@@ -11,7 +11,7 @@ const wss = new WebSocket.Server({ port: PORT });
 let currentVideoData = null;
 const clients = new Set();
 
-console.log(`✅ WebSocket server started on ws://localhost:${PORT}`);
+console.log(`WebSocket server started on ws://localhost:${PORT}`);
 
 wss.on('connection', (ws, req) => {
     const clientType = req.headers['user-agent']?.includes('Chrome') ? 'Browser Extension' : 'OBS Display';
@@ -24,18 +24,18 @@ wss.on('connection', (ws, req) => {
     }
 
     ws.on('message', (data) => {
-        console.log(`📨 Message received from ${clientType}`);
-        console.log(`   Raw data: ${data}`);
+        console.log(`Message received from ${clientType}`);
+        console.log(`Raw data: ${data}`);
         try {
             const message = JSON.parse(data.toString());
-            console.log(`🔄 Received message from ${clientType}:`, message);
+            console.log(`Received message from ${clientType}:`, message);
             
             if (message.type === 'NAVIGATE_PLAYLIST') {
-                console.log(`🎵 Playlist navigation: ${message.data.direction}`);
+                console.log(`Playlist navigation: ${message.data.direction}`);
             } else if (message.type === 'LOAD_FULL_PLAYLIST') {
-                console.log(`📋 Request to load full playlist`);
+                console.log(`Request to load full playlist`);
             } else {
-                console.log(`📹 Video update: ${message.title || 'Stopped'}`);
+                console.log(`Video update: ${message.title || 'Stopped'}`);
                 currentVideoData = message;
             }
 
@@ -45,17 +45,17 @@ wss.on('connection', (ws, req) => {
                 }
             });
         } catch (error) {
-            console.error('❌ Error parsing message:', error);
+            console.error('Error parsing message:', error);
         }
     });
 
     ws.on('close', () => {
-        console.log(`📡 Client disconnected: ${clientType}`);
+        console.log(`Client disconnected: ${clientType}`);
         clients.delete(ws);
     });
 
     ws.on('error', (error) => {
-        console.error('❌ WebSocket error:', error);
+        console.error('WebSocket error:', error);
         clients.delete(ws);
     });
 });
@@ -79,8 +79,8 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(HTTP_PORT, () => {
-    console.log(`🌐 HTTP server started on http://localhost:${HTTP_PORT}`);
-    console.log(`\n📋 Instructions:`);
+    console.log(`HTTP server started on http://localhost:${HTTP_PORT}`);
+    console.log(`\nInstructions:`);
     console.log(`   1. Add a Browser Source in OBS`);
     console.log(`   2. Set URL to: http://localhost:${HTTP_PORT}`);
     console.log(`   3. Set Width: 800, Height: 200`);
@@ -89,7 +89,7 @@ server.listen(HTTP_PORT, () => {
 });
 
 process.on('SIGINT', () => {
-    console.log('\n👋 Shutting down servers...');
+    console.log('\nShutting down servers...');
     wss.close();
     server.close();
     process.exit(0);

@@ -253,10 +253,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log('Next button found:', !!nextButton);
             if (nextButton) {
                 nextButton.click();
-                console.log('✅ Clicked next button');
+                console.log('Clicked next button');
                 sendResponse({success: true});
             } else {
-                console.log('❌ Next button not found');
+                console.log('Next button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         } else if (direction === 'prev') {
@@ -264,10 +264,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log('Prev button found:', !!prevButton);
             if (prevButton) {
                 prevButton.click();
-                console.log('✅ Clicked previous button');
+                console.log('Clicked previous button');
                 sendResponse({success: true});
             } else {
-                console.log('❌ Previous button not found');
+                console.log('Previous button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         }
@@ -278,7 +278,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({success: true});
         return true;
     } else if (message.type === 'LOAD_FULL_PLAYLIST') {
-        console.log('📋 Sending cached playlist data');
+        console.log('Sending cached playlist data');
         const playlist = getPlaylistInfo();
         sendResponse({success: true, playlist: playlist});
         return true;
