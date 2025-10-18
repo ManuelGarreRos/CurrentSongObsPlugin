@@ -1,6 +1,87 @@
 let currentVideoData = null;
 let updateInterval = null;
 let isTabVisible = !document.hidden;
+let savedPlaylistStates = {
+    shuffle: false,
+    loop: 'none'
+};
+
+function getPlaylistStates() {
+    const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
+    const loopButton = document.querySelector('ytd-playlist-loop-button-renderer button[aria-label*="bucle"], ytd-playlist-loop-button-renderer button[aria-label*="loop"]');
+    
+    const shuffleActive = shuffleButton?.getAttribute('aria-pressed') === 'true';
+    
+    let loopState = 'none';
+    if (loopButton) {
+        const ariaLabel = loopButton.getAttribute('aria-label') || '';
+        const title = loopButton.getAttribute('title') || '';
+        const combinedText = (ariaLabel + ' ' + title).toLowerCase();
+        
+        if (combinedText.includes('una vez') || combinedText.includes('loop one')) {
+            loopState = 'one';
+        } else if (combinedText.includes('activado') || combinedText.includes('on')) {
+            loopState = 'all';
+        }
+    }
+    
+    return { shuffle: shuffleActive, loop: loopState };
+}
+
+function savePlaylistStates() {
+    if (isRestoring) {
+        return;
+    }
+    
+    const states = getPlaylistStates();
+    if (states.shuffle !== savedPlaylistStates.shuffle || states.loop !== savedPlaylistStates.loop) {
+        savedPlaylistStates = states;
+        savePlaylistStatesToStorage();
+    }
+}
+
+let isRestoring = false;
+
+function restorePlaylistStates() {
+    isRestoring = true;
+    setTimeout(() => {
+        const currentStates = getPlaylistStates();
+        
+        if (savedPlaylistStates.shuffle !== currentStates.shuffle) {
+            const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
+            if (shuffleButton) {
+                shuffleButton.click();
+            }
+        }
+        
+        if (savedPlaylistStates.loop !== currentStates.loop) {
+            const loopButton = document.querySelector('ytd-playlist-loop-button-renderer button[aria-label*="bucle"], ytd-playlist-loop-button-renderer button[aria-label*="loop"]');
+            if (loopButton) {
+                const clicksNeeded = {
+                    'none': { 'one': 2, 'all': 1 },
+                    'all': { 'none': 1, 'one': 1 },
+                    'one': { 'none': 1, 'all': 2 }
+                };
+                
+                const clicks = clicksNeeded[currentStates.loop]?.[savedPlaylistStates.loop] || 0;
+                
+                for (let i = 0; i < clicks; i++) {
+                    setTimeout(() => loopButton.click(), i * 100);
+                }
+            }
+        }
+        
+        setTimeout(() => {
+            isRestoring = false;
+        }, 500);
+    }, 3000);
+}
+
+function savePlaylistStatesToStorage() {
+    chrome.storage.local.set({
+        playlist_states: savedPlaylistStates
+    });
+}
 
 function sendVideoInfo() {
     const videoData = getVideoInfo();
@@ -42,8 +123,22 @@ function init() {
         clearInterval(updateInterval);
     }
     
-    updateInterval = setInterval(sendVideoInfo, 1000);
+    updateInterval = setInterval(() => {
+        sendVideoInfo();
+        savePlaylistStates();
+    }, 1000);
     sendVideoInfo();
+    
+    chrome.storage.local.get(['playlist_states'], (result) => {
+        if (result.playlist_states) {
+            savedPlaylistStates = result.playlist_states;
+            
+            const url = location.href;
+            if (url.includes('&list=') || url.includes('?list=')) {
+                restorePlaylistStates();
+            }
+        }
+    });
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -61,13 +156,29 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+let lastUrl = location.href;
+function startUrlMonitoring() {
+    setInterval(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            if (url.includes('&list=') || url.includes('?list=')) {
+                restorePlaylistStates();
+            }
+        }
+    }, 500);
+}
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
 }
 
-window.addEventListener('load', init);
+window.addEventListener('load', () => {
+    init();
+    startUrlMonitoring();
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('Content script received message:', message);
@@ -106,7 +217,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     } else if (message.type === 'PLAY_VIDEO') {
         console.log('Playing video:', message.data.url);
+        savePlaylistStates();
         window.location.href = message.data.url;
+        
+        window.addEventListener('load', () => {
+            restorePlaylistStates();
+        }, { once: true });
+        
         sendResponse({success: true});
         return true;
     } else if (message.type === 'LOAD_FULL_PLAYLIST') {

@@ -1,6 +1,86 @@
 let currentVideoData = null;
 let updateInterval = null;
 let isTabVisible = !document.hidden;
+let savedPlaylistStates = {
+    shuffle: false,
+    loop: 'none'
+};
+
+function getPlaylistStates() {
+    const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
+    const loopButton = document.querySelector('ytd-playlist-loop-button-renderer button[aria-label*="bucle"], ytd-playlist-loop-button-renderer button[aria-label*="loop"]');
+    
+    console.log('🔍 Shuffle button:', shuffleButton);
+    console.log('🔍 Loop button:', loopButton);
+    
+    const shuffleActive = shuffleButton?.getAttribute('aria-pressed') === 'true';
+    
+    let loopState = 'none';
+    if (loopButton) {
+        const ariaLabel = loopButton.getAttribute('aria-label') || '';
+        const title = loopButton.getAttribute('title') || '';
+        const combinedText = (ariaLabel + ' ' + title).toLowerCase();
+        
+        console.log('🔍 Loop button aria-label:', ariaLabel);
+        console.log('🔍 Loop button title:', title);
+        console.log('🔍 Combined text:', combinedText);
+        
+        if (combinedText.includes('una vez') || combinedText.includes('loop one')) {
+            loopState = 'one';
+        } else if (combinedText.includes('activado') || combinedText.includes('on')) {
+            loopState = 'all';
+        }
+    }
+    
+    console.log('🎯 Detected states:', { shuffle: shuffleActive, loop: loopState });
+    return { shuffle: shuffleActive, loop: loopState };
+}
+
+function savePlaylistStates() {
+    console.log('🔄 savePlaylistStates() called');
+    const states = getPlaylistStates();
+    console.log('📊 Current states from getPlaylistStates():', states);
+    console.log('📊 Saved states in memory:', savedPlaylistStates);
+    if (states.shuffle !== savedPlaylistStates.shuffle || states.loop !== savedPlaylistStates.loop) {
+        savedPlaylistStates = states;
+        savePlaylistStatesToStorage();
+        console.log('💾 Saved playlist states:', states);
+    }
+}
+
+function restorePlaylistStates() {
+    setTimeout(() => {
+        const currentStates = getPlaylistStates();
+        console.log('🔍 Current states:', currentStates);
+        console.log('🔍 Saved states:', savedPlaylistStates);
+        
+        if (savedPlaylistStates.shuffle !== currentStates.shuffle) {
+            const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
+            if (shuffleButton) {
+                console.log('🔀 Restoring shuffle state:', savedPlaylistStates.shuffle);
+                shuffleButton.click();
+            }
+        }
+        
+        if (savedPlaylistStates.loop !== currentStates.loop) {
+            const loopButton = document.querySelector('ytd-playlist-loop-button-renderer button[aria-label*="bucle"], ytd-playlist-loop-button-renderer button[aria-label*="loop"]');
+            if (loopButton) {
+                const clicksNeeded = {
+                    'none': { 'one': 2, 'all': 1 },
+                    'all': { 'none': 1, 'one': 1 },
+                    'one': { 'none': 1, 'all': 2 }
+                };
+                
+                const clicks = clicksNeeded[currentStates.loop]?.[savedPlaylistStates.loop] || 0;
+                console.log('🔁 Restoring loop state:', savedPlaylistStates.loop, `(${clicks} clicks)`);
+                
+                for (let i = 0; i < clicks; i++) {
+                    setTimeout(() => loopButton.click(), i * 100);
+                }
+            }
+        }
+    }, 1000);
+}
 
 function sendVideoInfo() {
     const videoData = getVideoInfo();
@@ -42,8 +122,24 @@ function init() {
         clearInterval(updateInterval);
     }
     
-    updateInterval = setInterval(sendVideoInfo, 1000);
+    updateInterval = setInterval(() => {
+        sendVideoInfo();
+        savePlaylistStates();
+    }, 1000);
     sendVideoInfo();
+    
+    chrome.storage.local.get(['playlist_states'], (result) => {
+        if (result.playlist_states) {
+            savedPlaylistStates = result.playlist_states;
+            console.log('📦 Loaded saved playlist states:', savedPlaylistStates);
+        }
+    });
+}
+
+function savePlaylistStatesToStorage() {
+    chrome.storage.local.set({
+        playlist_states: savedPlaylistStates
+    });
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -106,7 +202,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     } else if (message.type === 'PLAY_VIDEO') {
         console.log('Playing video:', message.data.url);
+        savePlaylistStates();
         window.location.href = message.data.url;
+        
+        window.addEventListener('load', () => {
+            restorePlaylistStates();
+        }, { once: true });
+        
         sendResponse({success: true});
         return true;
     } else if (message.type === 'LOAD_FULL_PLAYLIST') {
