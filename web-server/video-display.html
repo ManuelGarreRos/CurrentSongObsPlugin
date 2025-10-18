@@ -21,6 +21,19 @@
             </div>
             
             <div class="info-card">
+                <div class="equalizer" id="equalizer">
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                </div>
+                
                 <div class="playlist-icon" id="playlistIcon" onclick="togglePlaylist()">🔍</div>
                 
                 <div class="title" id="title">Song Title</div>
@@ -135,6 +148,10 @@
                         <label class="toggle-item">
                             <input type="checkbox" id="showPlaylistIcon" checked onchange="updateVisibility()">
                             <span>Playlist Icon</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="showEqualizer" checked onchange="updateVisibility()">
+                            <span>Equalizer</span>
                         </label>
                     </div>
                     

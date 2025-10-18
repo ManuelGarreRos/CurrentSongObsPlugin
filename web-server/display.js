@@ -342,7 +342,8 @@ const defaultConfig = {
         artist: true,
         album: true,
         progress: true,
-        playlistIcon: true
+        playlistIcon: true,
+        equalizer: true
     },
     playlistIcon: {
         invisible: false,
@@ -474,7 +475,8 @@ function updateVisibility() {
         artist: document.getElementById('showArtist').checked,
         album: document.getElementById('showAlbum').checked,
         progress: document.getElementById('showProgress').checked,
-        playlistIcon: document.getElementById('showPlaylistIcon').checked
+        playlistIcon: document.getElementById('showPlaylistIcon').checked,
+        equalizer: document.getElementById('showEqualizer').checked
     };
     
     currentConfig.playlistIcon.invisible = document.getElementById('playlistIconInvisible').checked;
@@ -492,6 +494,7 @@ function applyVisibility() {
     const albumEl = document.getElementById('album');
     const progressContainer = document.querySelector('.progress-container');
     const icon = document.getElementById('playlistIcon');
+    const equalizer = document.getElementById('equalizer');
     
     if (thumbnailContainer) {
         if (v.thumbnail) {
@@ -545,6 +548,10 @@ function applyVisibility() {
             icon.style.display = 'flex';
             icon.style.opacity = currentConfig.playlistIcon.opacity / 100;
         }
+    }
+    
+    if (equalizer) {
+        equalizer.style.display = v.equalizer ? 'flex' : 'none';
     }
 }
 
@@ -628,6 +635,7 @@ function loadConfigToUI() {
     document.getElementById('showAlbum').checked = currentConfig.visibility.album;
     document.getElementById('showProgress').checked = currentConfig.visibility.progress;
     document.getElementById('showPlaylistIcon').checked = currentConfig.visibility.playlistIcon;
+    document.getElementById('showEqualizer').checked = currentConfig.visibility.equalizer;
     
     document.getElementById('playlistIconInvisible').checked = currentConfig.playlistIcon.invisible;
     document.getElementById('iconOpacity').value = currentConfig.playlistIcon.opacity;
