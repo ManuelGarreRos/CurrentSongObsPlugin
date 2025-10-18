@@ -8,13 +8,22 @@ This server receives video information from the browser extension via WebSocket 
 
 ## Features
 
+### Server Features
 - 🔌 **WebSocket server** - Relays messages between extension and OBS (port 8765)
 - 🌐 **HTTP server** - Serves the OBS browser source display (port 8008)
 - 🔄 **Multi-client support** - Handles multiple simultaneous connections
 - 📡 **Message broadcasting** - Forwards messages between all connected clients
 - 💾 **State preservation** - Caches current video data for new connections
-- 🎨 **Beautiful animated UI** - Rotating vinyl-style thumbnail with glow effects
-- 🎼 **Interactive playlist** - Searchable playlist with click-to-play
+
+### Display Features
+- 💿 **Vinyl disk effect** - Realistic spinning record with grooves and center hole
+- 🎚️ **Animated equalizer** - 10-bar music visualizer with randomized animations
+- 🖼️ **Album cover crossfade** - Smooth transitions between thumbnail and album art
+- ⏭️ **Next song preview** - Shows upcoming track on hover or when song is ending
+- 🎨 **6 Theme presets** - Customizable color schemes (Cyberpunk, Midnight, Purple, Pink, Mint, Warm)
+- 🎼 **Interactive playlist** - Searchable playlist with click-to-play navigation
+- ⚙️ **Configuration modal** - Full customization UI with export/import support
+- 🔀 **Playlist persistence** - Maintains shuffle/loop settings across tracks
 
 ## Installation
 
@@ -162,33 +171,34 @@ Simple HTTP server that:
 **Layout:**
 ```
 ┌─────────────────────────┐
-│   [Rotating Vinyl]      │  ← Animated thumbnail
+│  [═══ Equalizer ═══]    │  ← Animated music bars
+│   [Rotating Vinyl]      │  ← Spinning thumbnail/album
+│        [Next Song]→     │  ← Next song preview (hover)
 │                         │
 │  ┌───────────────────┐  │
 │  │ 🔍 Song Title     │  │  ← Search icon (if playlist)
 │  │    Artist Name    │  │
+│  │    💿 Album       │  │
 │  │ ─────────────────│  │  ← Progress bar
 │  │ 0:45      3:00    │  │  ← Time display
 │  └───────────────────┘  │
-│                         │
-│  ┌─────────────────┐    │  ← Playlist panel (hidden)
-│  │ Playlist (50) [✕]│   │
-│  │ 🔍 Search...     │   │
-│  │ ▶ Song 1         │   │
-│  │   Song 2         │   │
-│  │   Song 3         │   │
-│  └─────────────────┘    │
+│                    [⚙️] │  ← Config button
 └─────────────────────────┘
 ```
 
 **Features:**
-- Rotating vinyl-style thumbnail with glow effects
-- Smooth animations and transitions
-- Smart song/artist parsing
-- Real-time progress bar
-- Interactive playlist with search
-- Click-to-play any song
-- Auto-reconnection on disconnect
+- 💿 Rotating vinyl disk with realistic grooves and center hole
+- 🎚️ 10-bar animated equalizer with randomized motion
+- 🖼️ Album cover crossfade (alternates every 15 seconds)
+- ⏭️ Next song preview (shows on hover or at 85% progress)
+- 🎨 6 theme presets with customizable colors
+- ⚙️ Full configuration UI (show/hide, themes, effects, fonts)
+- 🎼 Interactive playlist panel with search and navigation
+- 🔀 Playlist shuffle/loop state persistence
+- 📏 Adjustable font size, family, and corner radius
+- 💾 Export/import configuration as JSON
+- 🎨 Custom CSS injection support
+- 🔄 Auto-reconnection on disconnect
 
 ## Message Protocol
 

@@ -6,14 +6,38 @@ Display currently playing videos from YouTube, Vimeo, Twitch, and other platform
 
 ## Features
 
+### Core Features
 - 🎵 **Real-time video tracking** - Automatically detects and displays currently playing videos
-- 🎨 **Beautiful animated UI** - Rotating thumbnail with glowing effects and smooth animations
+- 🎨 **Beautiful animated UI** - Rotating vinyl disk with glowing effects and smooth animations
 - 📊 **Live progress tracking** - Progress bar with current time and duration
-- 🎭 **Smart song parsing** - Automatically extracts artist and song title from video titles
-- 🎼 **Playlist support** - Interactive playlist viewer with search functionality
+- 🎭 **Smart music metadata** - Advanced 5-stage extraction for song, artist, and album info
+- 🎼 **Playlist support** - Interactive playlist viewer with search functionality and navigation
 - 🔄 **Auto-reconnection** - Automatically reconnects if connection is lost
 - 🌐 **Multi-platform** - Supports YouTube, Vimeo, Twitch, Dailymotion, and generic video players
 - ⚡ **No compilation needed** - Pure JavaScript, runs directly in Node.js
+
+### Visual Effects
+- 💿 **Vinyl disk effect** - Realistic vinyl record with grooves and center hole
+- 🎚️ **Animated equalizer** - 10-bar music equalizer with randomized animations
+- 🖼️ **Album cover crossfade** - Smooth transitions between video thumbnail and album artwork
+- 🔮 **Theme glow effects** - Dynamic glow and smoke effects matching selected theme
+- ⏭️ **Next song preview** - Hover or auto-show preview of upcoming track with thumbnail
+
+### Customization
+- 🎨 **6 Theme presets** - Cyberpunk, Midnight, Purple, Pink, Mint, Warm
+- 👁️ **Show/Hide controls** - Toggle any element (thumbnail, title, artist, album, progress, equalizer, etc.)
+- 🎭 **Visual effects toggle** - Enable/disable vinyl effect, rotation, equalizer independently
+- 📏 **Display options** - Font size, font family, crossfade speed, corner radius
+- 🎯 **Icon customization** - Invisible mode or adjustable opacity for playlist icon
+- 💾 **Config export/import** - Save and share your settings
+- 🎨 **Custom CSS** - Power users can inject custom styles
+
+### Playlist Features
+- 🔀 **Shuffle & Loop persistence** - Maintains playlist settings across song changes
+- 🔍 **Smart search** - Find songs by title or track number
+- ▶️ **Click to play** - Jump to any song in the playlist
+- 📋 **Full playlist view** - See all songs with current track highlighted
+- ⏭️ **Navigation buttons** - Skip to next/previous tracks
 
 ## Architecture
 
@@ -97,6 +121,33 @@ npm start
 - ✅ Dailymotion
 - ✅ Any site with HTML5 video players
 
+### Display Customization
+
+Click the **⚙️ Config button** (bottom-right) to access settings:
+
+**Theme Tab:**
+- Choose from 6 beautiful color schemes
+- Themes affect all glows, shadows, and accents
+
+**Visibility Tab:**
+- Toggle individual elements on/off
+- Make playlist icon invisible (hover-only mode)
+- Adjust icon opacity (0-100%)
+- Show/hide next song preview
+
+**Display Tab:**
+- Font size: Small, Medium, Large, Extra Large
+- Font family: Modern, Classic, Monospace, Rounded
+- Crossfade speed: Fast, Normal, Slow, Off
+- Corner radius: 0% (square) to 50% (circle)
+- Vinyl disk effect: Toggle grooves and center hole
+- Rotating animation: Enable/disable spinning
+
+**Advanced Tab:**
+- Export/Import configuration (save as JSON)
+- Reset to defaults
+- Custom CSS injection
+
 ### Playlist Features
 
 When watching a YouTube playlist:
@@ -104,6 +155,8 @@ When watching a YouTube playlist:
 - 🔎 Search songs by title or number
 - ▶️ Click any song to play it
 - ⏭️ Navigate with next/previous buttons
+- 🔀 Shuffle and loop settings persist across tracks
+- ⏭️ Next song preview shows on hover or when song is ending (85%+)
 
 ## Configuration
 
@@ -121,10 +174,17 @@ Then update:
 
 ### Customize Display
 
-Edit `web-server/video-display.html`:
-- Colors: Modify CSS gradient values
+**Via UI (Recommended):**
+- Click the ⚙️ config button in the display
+- All settings save automatically to localStorage
+- Export/import configs to share with others
+
+**Via Code:**
+Edit `web-server/styles.css` or inject custom CSS via the Advanced tab:
+- Colors: Modify CSS gradient values or use CSS variables (--theme-primary, --theme-secondary, etc.)
 - Size: Adjust container dimensions
 - Animation: Change rotation speed or effects
+- Custom styles: Use the Custom CSS textarea in Advanced settings
 
 ## Project Structure
 
