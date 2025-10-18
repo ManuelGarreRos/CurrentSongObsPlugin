@@ -183,6 +183,8 @@ function updateDisplay(data) {
     const progress = data.progress || 0;
     progressFill.style.width = progress + '%';
     progressText.textContent = Math.round(progress) + '%';
+    
+    updateNextSongPreview(data, progress);
 
     if (data.playlist) {
         updatePlaylist(data.playlist);
@@ -343,7 +345,8 @@ const defaultConfig = {
         album: true,
         progress: true,
         playlistIcon: true,
-        equalizer: true
+        equalizer: true,
+        nextSongPreview: true
     },
     playlistIcon: {
         invisible: false,
@@ -478,7 +481,8 @@ function updateVisibility() {
         album: document.getElementById('showAlbum').checked,
         progress: document.getElementById('showProgress').checked,
         playlistIcon: document.getElementById('showPlaylistIcon').checked,
-        equalizer: document.getElementById('showEqualizer').checked
+        equalizer: document.getElementById('showEqualizer').checked,
+        nextSongPreview: document.getElementById('showNextSongPreview').checked
     };
     
     currentConfig.playlistIcon.invisible = document.getElementById('playlistIconInvisible').checked;
@@ -497,6 +501,7 @@ function applyVisibility() {
     const progressContainer = document.querySelector('.progress-container');
     const icon = document.getElementById('playlistIcon');
     const equalizer = document.getElementById('equalizer');
+    const nextPreview = document.getElementById('nextSongPreview');
     
     if (thumbnailContainer) {
         if (v.thumbnail) {
@@ -554,6 +559,14 @@ function applyVisibility() {
     
     if (equalizer) {
         equalizer.style.display = v.equalizer ? 'flex' : 'none';
+    }
+    
+    if (nextPreview) {
+        if (v.nextSongPreview) {
+            nextPreview.classList.remove('hidden');
+        } else {
+            nextPreview.classList.add('hidden');
+        }
     }
 }
 
@@ -659,6 +672,7 @@ function loadConfigToUI() {
     document.getElementById('showProgress').checked = currentConfig.visibility.progress;
     document.getElementById('showPlaylistIcon').checked = currentConfig.visibility.playlistIcon;
     document.getElementById('showEqualizer').checked = currentConfig.visibility.equalizer;
+    document.getElementById('showNextSongPreview').checked = currentConfig.visibility.nextSongPreview;
     
     document.getElementById('playlistIconInvisible').checked = currentConfig.playlistIcon.invisible;
     document.getElementById('iconOpacity').value = currentConfig.playlistIcon.opacity;
@@ -726,3 +740,34 @@ function resetConfig() {
 }
 
 loadConfig();
+
+function updateNextSongPreview(data, progress) {
+    const nextPreview = document.getElementById('nextSongPreview');
+    if (!nextPreview || !currentConfig.visibility.nextSongPreview) return;
+    
+    if (!currentPlaylist || !currentPlaylist.items || currentPlaylist.items.length === 0) {
+        nextPreview.classList.add('hidden');
+        return;
+    }
+    
+    const currentIndex = currentPlaylist.items.findIndex(item => item.isCurrent);
+    if (currentIndex === -1 || currentIndex >= currentPlaylist.items.length - 1) {
+        nextPreview.classList.add('hidden');
+        return;
+    }
+    
+    const nextSong = currentPlaylist.items[currentIndex + 1];
+    if (nextSong) {
+        nextPreview.classList.remove('hidden');
+        
+        const { songTitle, artist } = parseSongInfo(nextSong.title);
+        document.getElementById('nextTitle').textContent = songTitle;
+        document.getElementById('nextArtist').textContent = artist;
+        
+        if (progress >= 90) {
+            nextPreview.classList.add('auto-show');
+        } else {
+            nextPreview.classList.remove('auto-show');
+        }
+    }
+}
