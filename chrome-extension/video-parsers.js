@@ -116,7 +116,12 @@ function extractMusicMetadataFromDescription() {
                     const titleEl = videoAttributeCard.querySelector('h1.yt-video-attribute-view-model__title');
                     const subtitleEl = videoAttributeCard.querySelector('h4.yt-video-attribute-view-model__subtitle');
                     const secondarySubtitle = videoAttributeCard.querySelector('.yt-video-attribute-view-model__secondary-subtitle .yt-core-attributed-string');
-                    const albumCoverImg = videoAttributeCard.querySelector('img');
+                    
+                    let albumCoverImg = videoAttributeCard.querySelector('img');
+                    
+                    if (!albumCoverImg || !albumCoverImg.src) {
+                        albumCoverImg = musicSection.querySelector('img[src*="googleusercontent"], img[src*="ytimg"]');
+                    }
                     
                     const songTitle = titleEl?.textContent?.trim();
                     const artist = subtitleEl?.textContent?.trim();
@@ -134,7 +139,22 @@ function extractMusicMetadataFromDescription() {
                             .trim();
                     }
                     
-                    const albumCover = albumCoverImg ? albumCoverImg.src : null;
+                    let albumCover = null;
+                    if (albumCoverImg) {
+                        albumCover = albumCoverImg.src || 
+                                    albumCoverImg.getAttribute('data-src') ||
+                                    albumCoverImg.getAttribute('data-thumb-url');
+                        
+                        if (!albumCover || albumCover === '') {
+                            const bgImage = window.getComputedStyle(albumCoverImg.parentElement || albumCoverImg).backgroundImage;
+                            if (bgImage && bgImage !== 'none') {
+                                const match = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
+                                if (match) {
+                                    albumCover = match[1];
+                                }
+                            }
+                        }
+                    }
                     
                     console.log('🔍 Debug: Found video attribute card:', {
                         songTitle,

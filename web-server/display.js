@@ -125,10 +125,7 @@ function stopCrossfade() {
 }
 
 function updateDisplay(data) {
-    console.log('🎬 updateDisplay called with data:', data);
-    
     if (data.type === 'stopped' || !data.playing) {
-        console.log('⏹️ Video stopped or not playing');
         if (!hasDisplayedVideo) {
             noVideo.style.display = 'flex';
             videoInfo.classList.remove('active');
@@ -137,11 +134,9 @@ function updateDisplay(data) {
         return;
     }
 
-    console.log('▶️ Video is playing, showing video info');
     hasDisplayedVideo = true;
     noVideo.style.display = 'none';
     videoInfo.classList.add('active');
-    console.log('✅ Added active class to videoInfo, classList:', videoInfo.classList);
 
     let displayTitle = data.songTitle || data.title || 'Unknown Title';
     let displayArtist = data.artist || 'Unknown Artist';
@@ -176,6 +171,7 @@ function updateDisplay(data) {
         if (thumbnailToUse) {
             thumbnail.src = thumbnailToUse;
             thumbnail.style.display = 'block';
+            albumCoverEl.style.display = 'none';
         } else {
             thumbnail.style.display = 'none';
         }
@@ -296,7 +292,6 @@ function playVideo(item) {
 
 ws.onopen = () => {
     console.log('✅ Connected to WebSocket server');
-    console.log('Server URL: ws://localhost:8765');
     isConnected = true;
     statusIndicator.classList.remove('disconnected');
     connectionStatus.textContent = 'Connected';
@@ -308,10 +303,8 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (event) => {
-    console.log('📨 Received message from server');
     try {
         const data = JSON.parse(event.data);
-        console.log('📦 Parsed data:', data);
         updateDisplay(data);
     } catch (error) {
         console.error('❌ Error parsing message:', error);
@@ -390,15 +383,10 @@ function applyConfig() {
 }
 
 function openConfigModal() {
-    console.log('Opening config modal...');
     const modal = document.getElementById('configModal');
-    console.log('Modal element:', modal);
     if (modal) {
         modal.classList.add('active');
-        console.log('Added active class, classList:', modal.classList);
         loadConfigToUI();
-    } else {
-        console.error('Config modal element not found!');
     }
 }
 
