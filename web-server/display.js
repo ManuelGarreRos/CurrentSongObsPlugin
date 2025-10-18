@@ -764,7 +764,13 @@ function updateNextSongPreview(data, progress) {
         document.getElementById('nextTitle').textContent = songTitle;
         document.getElementById('nextArtist').textContent = artist;
         
-        if (progress >= 90) {
+        const nextThumbnailEl = document.getElementById('nextThumbnail');
+        if (nextThumbnailEl) {
+            const thumbnailUrl = `https://i.ytimg.com/vi/${nextSong.videoId}/default.jpg`;
+            nextThumbnailEl.src = thumbnailUrl;
+        }
+        
+        if (progress >= 95) {
             nextPreview.classList.add('auto-show');
         } else {
             nextPreview.classList.remove('auto-show');
