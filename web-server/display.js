@@ -4,8 +4,10 @@ const connectionStatus = document.getElementById('connectionStatus');
 const noVideo = document.getElementById('noVideo');
 const videoInfo = document.getElementById('videoInfo');
 const thumbnail = document.getElementById('thumbnail');
+const albumCoverEl = document.getElementById('albumCover');
 const title = document.getElementById('title');
 const artist = document.getElementById('artist');
+const album = document.getElementById('album');
 const currentTimeEl = document.getElementById('currentTime');
 const durationEl = document.getElementById('duration');
 const progressFill = document.getElementById('progressFill');
@@ -20,6 +22,8 @@ let hasDisplayedVideo = false;
 let currentPlaylist = null;
 let playlistUpdateInterval = null;
 let isConnected = false;
+let crossfadeInterval = null;
+let showingAlbumCover = false;
 
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
@@ -80,12 +84,53 @@ function parseSongInfo(rawTitle) {
     return { songTitle, artist };
 }
 
+function startCrossfade(videoThumbnail, albumCover) {
+    if (crossfadeInterval) {
+        clearInterval(crossfadeInterval);
+    }
+    
+    thumbnail.src = videoThumbnail;
+    albumCoverEl.src = albumCover;
+    
+    thumbnail.style.display = 'block';
+    albumCoverEl.style.display = 'block';
+    
+    thumbnail.classList.remove('fade-out');
+    albumCoverEl.classList.remove('fade-in');
+    
+    showingAlbumCover = false;
+    
+    crossfadeInterval = setInterval(() => {
+        if (showingAlbumCover) {
+            thumbnail.classList.remove('fade-out');
+            albumCoverEl.classList.remove('fade-in');
+            console.log('🖼️ Showing video thumbnail');
+        } else {
+            thumbnail.classList.add('fade-out');
+            albumCoverEl.classList.add('fade-in');
+            console.log('💿 Showing album cover');
+        }
+        showingAlbumCover = !showingAlbumCover;
+    }, 15000);
+}
+
+function stopCrossfade() {
+    if (crossfadeInterval) {
+        clearInterval(crossfadeInterval);
+        crossfadeInterval = null;
+    }
+    thumbnail.classList.remove('fade-out');
+    albumCoverEl.classList.remove('fade-in');
+    albumCoverEl.style.display = 'none';
+}
+
 function updateDisplay(data) {
     if (data.type === 'stopped' || !data.playing) {
         if (!hasDisplayedVideo) {
             noVideo.style.display = 'flex';
             videoInfo.classList.remove('active');
         }
+        stopCrossfade();
         return;
     }
 
@@ -93,17 +138,42 @@ function updateDisplay(data) {
     noVideo.style.display = 'none';
     videoInfo.classList.add('active');
 
-    const rawTitle = data.title || 'Unknown Title';
-    const { songTitle, artist: parsedArtist } = parseSongInfo(rawTitle);
+    let displayTitle = data.songTitle || data.title || 'Unknown Title';
+    let displayArtist = data.artist || 'Unknown Artist';
     
-    title.textContent = songTitle;
-    artist.textContent = parsedArtist;
+    if (!data.songTitle && data.title) {
+        const { songTitle, artist: parsedArtist } = parseSongInfo(data.title);
+        displayTitle = songTitle;
+        displayArtist = parsedArtist;
+    }
     
-    if (data.thumbnail) {
-        thumbnail.src = data.thumbnail;
-        thumbnail.style.display = 'block';
+    if (data.metadataSource) {
+        console.log(`📊 Using metadata from: ${data.metadataSource}`);
+    }
+    
+    title.textContent = displayTitle;
+    artist.textContent = displayArtist;
+    
+    if (data.album) {
+        album.textContent = `💿 ${data.album}`;
+        album.classList.add('show');
+        console.log(`💿 Album: ${data.album}`);
     } else {
-        thumbnail.style.display = 'none';
+        album.textContent = '';
+        album.classList.remove('show');
+    }
+    
+    if (data.albumCover && data.videoThumbnail && data.albumCover !== data.videoThumbnail) {
+        startCrossfade(data.videoThumbnail, data.albumCover);
+    } else {
+        stopCrossfade();
+        const thumbnailToUse = data.albumCover || data.videoThumbnail || data.thumbnail;
+        if (thumbnailToUse) {
+            thumbnail.src = thumbnailToUse;
+            thumbnail.style.display = 'block';
+        } else {
+            thumbnail.style.display = 'none';
+        }
     }
 
     currentTimeEl.textContent = formatTime(data.currentTime || 0);
