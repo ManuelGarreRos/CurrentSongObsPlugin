@@ -203,6 +203,12 @@
                         <label>Corner Radius: <span id="cornerRadiusValue">50</span>%</label>
                         <input type="range" id="cornerRadius" min="0" max="50" value="50" oninput="updateCornerRadius(this.value)">
                     </div>
+                    
+                    <h3 style="margin-top: 20px;">Effects</h3>
+                    <label class="toggle-item">
+                        <input type="checkbox" id="vinylLook" checked onchange="updateDisplayConfig()">
+                        <span>Vinyl Disk Effect</span>
+                    </label>
                 </div>
                 
                 <div class="tab-content" id="advancedTab">

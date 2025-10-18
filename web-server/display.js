@@ -353,7 +353,8 @@ const defaultConfig = {
         fontSize: 'medium',
         fontFamily: 'modern',
         crossfadeSpeed: 'normal',
-        cornerRadius: 50
+        cornerRadius: 50,
+        vinylLook: true
     },
     customCSS: ''
 };
@@ -567,7 +568,8 @@ function updateDisplayConfig() {
         fontSize: document.getElementById('fontSize').value,
         fontFamily: document.getElementById('fontFamily').value,
         crossfadeSpeed: document.getElementById('crossfadeSpeed').value,
-        cornerRadius: parseInt(document.getElementById('cornerRadius').value)
+        cornerRadius: parseInt(document.getElementById('cornerRadius').value),
+        vinylLook: document.getElementById('vinylLook').checked
     };
     
     saveConfig();
@@ -601,8 +603,19 @@ function applyDisplay() {
     };
     document.documentElement.style.setProperty('--crossfade-speed', crossfadeSpeeds[d.crossfadeSpeed] || '2s');
     
-    document.querySelector('.thumbnail-container').style.borderRadius = d.cornerRadius + '%';
-    document.querySelector('.thumbnail-wrapper').style.borderRadius = d.cornerRadius + '%';
+    const thumbnailContainer = document.querySelector('.thumbnail-container');
+    const thumbnailWrapper = document.querySelector('.thumbnail-wrapper');
+    
+    if (thumbnailContainer) thumbnailContainer.style.borderRadius = d.cornerRadius + '%';
+    if (thumbnailWrapper) thumbnailWrapper.style.borderRadius = d.cornerRadius + '%';
+    
+    if (thumbnailContainer) {
+        if (d.vinylLook) {
+            thumbnailContainer.classList.add('vinyl-effect');
+        } else {
+            thumbnailContainer.classList.remove('vinyl-effect');
+        }
+    }
 }
 
 function updateCornerRadius(value) {
@@ -646,6 +659,7 @@ function loadConfigToUI() {
     document.getElementById('crossfadeSpeed').value = currentConfig.display.crossfadeSpeed;
     document.getElementById('cornerRadius').value = currentConfig.display.cornerRadius;
     document.getElementById('cornerRadiusValue').textContent = currentConfig.display.cornerRadius;
+    document.getElementById('vinylLook').checked = currentConfig.display.vinylLook;
     
     document.getElementById('customCSS').value = currentConfig.customCSS;
     
