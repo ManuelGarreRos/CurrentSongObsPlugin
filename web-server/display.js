@@ -125,7 +125,10 @@ function stopCrossfade() {
 }
 
 function updateDisplay(data) {
+    console.log('🎬 updateDisplay called with data:', data);
+    
     if (data.type === 'stopped' || !data.playing) {
+        console.log('⏹️ Video stopped or not playing');
         if (!hasDisplayedVideo) {
             noVideo.style.display = 'flex';
             videoInfo.classList.remove('active');
@@ -134,9 +137,11 @@ function updateDisplay(data) {
         return;
     }
 
+    console.log('▶️ Video is playing, showing video info');
     hasDisplayedVideo = true;
     noVideo.style.display = 'none';
     videoInfo.classList.add('active');
+    console.log('✅ Added active class to videoInfo, classList:', videoInfo.classList);
 
     let displayTitle = data.songTitle || data.title || 'Unknown Title';
     let displayArtist = data.artist || 'Unknown Artist';
@@ -291,6 +296,7 @@ function playVideo(item) {
 
 ws.onopen = () => {
     console.log('✅ Connected to WebSocket server');
+    console.log('Server URL: ws://localhost:8765');
     isConnected = true;
     statusIndicator.classList.remove('disconnected');
     connectionStatus.textContent = 'Connected';
@@ -302,8 +308,10 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (event) => {
+    console.log('📨 Received message from server');
     try {
         const data = JSON.parse(event.data);
+        console.log('📦 Parsed data:', data);
         updateDisplay(data);
     } catch (error) {
         console.error('❌ Error parsing message:', error);
@@ -332,3 +340,368 @@ ws.onerror = () => {
     statusIndicator.classList.add('disconnected');
     connectionStatus.textContent = 'Waiting for server...';
 };
+
+const defaultConfig = {
+    theme: 'cyberpunk',
+    visibility: {
+        thumbnail: true,
+        title: true,
+        artist: true,
+        album: true,
+        progress: true,
+        playlistIcon: true
+    },
+    playlistIcon: {
+        invisible: false,
+        opacity: 100
+    },
+    display: {
+        fontSize: 'medium',
+        fontFamily: 'modern',
+        crossfadeSpeed: 'normal',
+        cornerRadius: 50
+    },
+    customCSS: ''
+};
+
+let currentConfig = { ...defaultConfig };
+
+function loadConfig() {
+    const saved = localStorage.getItem('displayConfig');
+    if (saved) {
+        try {
+            currentConfig = { ...defaultConfig, ...JSON.parse(saved) };
+        } catch (e) {
+            console.error('Failed to load config:', e);
+        }
+    }
+    applyConfig();
+}
+
+function saveConfig() {
+    localStorage.setItem('displayConfig', JSON.stringify(currentConfig));
+}
+
+function applyConfig() {
+    applyTheme(currentConfig.theme);
+    applyVisibility();
+    applyDisplay();
+    applyCustomCSS();
+}
+
+function openConfigModal() {
+    console.log('Opening config modal...');
+    const modal = document.getElementById('configModal');
+    console.log('Modal element:', modal);
+    if (modal) {
+        modal.classList.add('active');
+        console.log('Added active class, classList:', modal.classList);
+        loadConfigToUI();
+    } else {
+        console.error('Config modal element not found!');
+    }
+}
+
+function closeConfigModal() {
+    document.getElementById('configModal').classList.remove('active');
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(tabName + 'Tab').classList.add('active');
+}
+
+function selectTheme(themeName) {
+    currentConfig.theme = themeName;
+    saveConfig();
+    applyTheme(themeName);
+    
+    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelector(`[data-theme="${themeName}"]`).classList.add('selected');
+}
+
+const themes = {
+    cyberpunk: {
+        primary: 'rgba(139, 92, 246, 0.9)',
+        secondary: 'rgba(167, 139, 250, 0.9)',
+        glow1: 'rgba(167, 139, 250, 0.22)',
+        glow2: 'rgba(139, 92, 246, 0.27)',
+        glow3: 'rgba(167, 139, 250, 0.17)'
+    },
+    midnight: {
+        primary: 'rgba(30, 58, 138, 0.9)',
+        secondary: 'rgba(59, 130, 246, 0.9)',
+        glow1: 'rgba(59, 130, 246, 0.22)',
+        glow2: 'rgba(30, 58, 138, 0.27)',
+        glow3: 'rgba(59, 130, 246, 0.17)'
+    },
+    purple: {
+        primary: 'rgba(88, 28, 135, 0.9)',
+        secondary: 'rgba(124, 58, 237, 0.9)',
+        glow1: 'rgba(124, 58, 237, 0.22)',
+        glow2: 'rgba(88, 28, 135, 0.27)',
+        glow3: 'rgba(124, 58, 237, 0.17)'
+    },
+    pink: {
+        primary: 'rgba(236, 72, 153, 0.9)',
+        secondary: 'rgba(249, 168, 212, 0.9)',
+        glow1: 'rgba(249, 168, 212, 0.22)',
+        glow2: 'rgba(236, 72, 153, 0.27)',
+        glow3: 'rgba(249, 168, 212, 0.17)'
+    },
+    mint: {
+        primary: 'rgba(16, 185, 129, 0.9)',
+        secondary: 'rgba(110, 231, 183, 0.9)',
+        glow1: 'rgba(110, 231, 183, 0.22)',
+        glow2: 'rgba(16, 185, 129, 0.27)',
+        glow3: 'rgba(110, 231, 183, 0.17)'
+    },
+    warm: {
+        primary: 'rgba(217, 119, 6, 0.9)',
+        secondary: 'rgba(251, 191, 36, 0.9)',
+        glow1: 'rgba(251, 191, 36, 0.22)',
+        glow2: 'rgba(217, 119, 6, 0.27)',
+        glow3: 'rgba(251, 191, 36, 0.17)'
+    }
+};
+
+function applyTheme(themeName) {
+    const theme = themes[themeName];
+    if (!theme) return;
+    
+    document.documentElement.style.setProperty('--theme-primary', theme.primary);
+    document.documentElement.style.setProperty('--theme-secondary', theme.secondary);
+    document.documentElement.style.setProperty('--theme-glow1', theme.glow1);
+    document.documentElement.style.setProperty('--theme-glow2', theme.glow2);
+    document.documentElement.style.setProperty('--theme-glow3', theme.glow3);
+}
+
+function updateVisibility() {
+    currentConfig.visibility = {
+        thumbnail: document.getElementById('showThumbnail').checked,
+        title: document.getElementById('showTitle').checked,
+        artist: document.getElementById('showArtist').checked,
+        album: document.getElementById('showAlbum').checked,
+        progress: document.getElementById('showProgress').checked,
+        playlistIcon: document.getElementById('showPlaylistIcon').checked
+    };
+    
+    currentConfig.playlistIcon.invisible = document.getElementById('playlistIconInvisible').checked;
+    
+    saveConfig();
+    applyVisibility();
+}
+
+function applyVisibility() {
+    const v = currentConfig.visibility;
+    
+    const thumbnailContainer = document.querySelector('.thumbnail-container');
+    const titleEl = document.getElementById('title');
+    const artistEl = document.getElementById('artist');
+    const albumEl = document.getElementById('album');
+    const progressContainer = document.querySelector('.progress-container');
+    const icon = document.getElementById('playlistIcon');
+    
+    if (thumbnailContainer) {
+        if (v.thumbnail) {
+            thumbnailContainer.style.removeProperty('display');
+        } else {
+            thumbnailContainer.style.display = 'none';
+        }
+    }
+    
+    if (titleEl) {
+        if (v.title) {
+            titleEl.style.removeProperty('display');
+        } else {
+            titleEl.style.display = 'none';
+        }
+    }
+    
+    if (artistEl) {
+        if (v.artist) {
+            artistEl.style.removeProperty('display');
+        } else {
+            artistEl.style.display = 'none';
+        }
+    }
+    
+    if (albumEl) {
+        if (v.album) {
+            albumEl.style.removeProperty('display');
+        } else {
+            albumEl.style.display = 'none';
+        }
+    }
+    
+    if (progressContainer) {
+        if (v.progress) {
+            progressContainer.style.removeProperty('display');
+        } else {
+            progressContainer.style.display = 'none';
+        }
+    }
+    
+    if (icon) {
+        if (!v.playlistIcon) {
+            icon.style.display = 'none';
+        } else if (currentConfig.playlistIcon.invisible) {
+            icon.style.opacity = '0';
+            icon.style.display = 'flex';
+            icon.addEventListener('mouseenter', () => icon.style.opacity = '1');
+            icon.addEventListener('mouseleave', () => icon.style.opacity = '0');
+        } else {
+            icon.style.display = 'flex';
+            icon.style.opacity = currentConfig.playlistIcon.opacity / 100;
+        }
+    }
+}
+
+function updateIconOpacity(value) {
+    document.getElementById('iconOpacityValue').textContent = value;
+    currentConfig.playlistIcon.opacity = parseInt(value);
+    saveConfig();
+    applyVisibility();
+}
+
+function updateDisplayConfig() {
+    currentConfig.display = {
+        fontSize: document.getElementById('fontSize').value,
+        fontFamily: document.getElementById('fontFamily').value,
+        crossfadeSpeed: document.getElementById('crossfadeSpeed').value,
+        cornerRadius: parseInt(document.getElementById('cornerRadius').value)
+    };
+    
+    saveConfig();
+    applyDisplay();
+}
+
+function applyDisplay() {
+    const d = currentConfig.display;
+    
+    const fontSizes = {
+        small: '0.85',
+        medium: '1',
+        large: '1.15',
+        xlarge: '1.3'
+    };
+    document.documentElement.style.setProperty('--font-scale', fontSizes[d.fontSize] || '1');
+    
+    const fontFamilies = {
+        modern: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        classic: "Georgia, 'Times New Roman', serif",
+        monospace: "'Courier New', Courier, monospace",
+        rounded: "'Quicksand', 'Segoe UI', sans-serif"
+    };
+    document.body.style.fontFamily = fontFamilies[d.fontFamily] || fontFamilies.modern;
+    
+    const crossfadeSpeeds = {
+        fast: '1s',
+        normal: '2s',
+        slow: '3s',
+        off: '0s'
+    };
+    document.documentElement.style.setProperty('--crossfade-speed', crossfadeSpeeds[d.crossfadeSpeed] || '2s');
+    
+    document.querySelector('.thumbnail-container').style.borderRadius = d.cornerRadius + '%';
+    document.querySelector('.thumbnail-wrapper').style.borderRadius = d.cornerRadius + '%';
+}
+
+function updateCornerRadius(value) {
+    document.getElementById('cornerRadiusValue').textContent = value;
+    currentConfig.display.cornerRadius = parseInt(value);
+    saveConfig();
+    applyDisplay();
+}
+
+function updateCustomCSS() {
+    currentConfig.customCSS = document.getElementById('customCSS').value;
+    saveConfig();
+    applyCustomCSS();
+}
+
+function applyCustomCSS() {
+    let styleEl = document.getElementById('customStyleTag');
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'customStyleTag';
+        document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = currentConfig.customCSS;
+}
+
+function loadConfigToUI() {
+    document.getElementById('showThumbnail').checked = currentConfig.visibility.thumbnail;
+    document.getElementById('showTitle').checked = currentConfig.visibility.title;
+    document.getElementById('showArtist').checked = currentConfig.visibility.artist;
+    document.getElementById('showAlbum').checked = currentConfig.visibility.album;
+    document.getElementById('showProgress').checked = currentConfig.visibility.progress;
+    document.getElementById('showPlaylistIcon').checked = currentConfig.visibility.playlistIcon;
+    
+    document.getElementById('playlistIconInvisible').checked = currentConfig.playlistIcon.invisible;
+    document.getElementById('iconOpacity').value = currentConfig.playlistIcon.opacity;
+    document.getElementById('iconOpacityValue').textContent = currentConfig.playlistIcon.opacity;
+    
+    document.getElementById('fontSize').value = currentConfig.display.fontSize;
+    document.getElementById('fontFamily').value = currentConfig.display.fontFamily;
+    document.getElementById('crossfadeSpeed').value = currentConfig.display.crossfadeSpeed;
+    document.getElementById('cornerRadius').value = currentConfig.display.cornerRadius;
+    document.getElementById('cornerRadiusValue').textContent = currentConfig.display.cornerRadius;
+    
+    document.getElementById('customCSS').value = currentConfig.customCSS;
+    
+    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+    const selected = document.querySelector(`[data-theme="${currentConfig.theme}"]`);
+    if (selected) selected.classList.add('selected');
+}
+
+function exportConfig() {
+    const dataStr = JSON.stringify(currentConfig, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'youtube-display-config.json';
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function importConfig() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    currentConfig = { ...defaultConfig, ...imported };
+                    saveConfig();
+                    applyConfig();
+                    loadConfigToUI();
+                    alert('Config imported successfully!');
+                } catch (err) {
+                    alert('Failed to import config: Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function resetConfig() {
+    if (confirm('Reset all settings to defaults?')) {
+        currentConfig = { ...defaultConfig };
+        saveConfig();
+        applyConfig();
+        loadConfigToUI();
+    }
+}
+
+loadConfig();
