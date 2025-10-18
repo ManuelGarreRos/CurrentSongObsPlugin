@@ -16,12 +16,10 @@ async function loadPlaylistFromStorage() {
         if (result[STORAGE_KEY]) {
             const playlistArray = JSON.parse(result[STORAGE_KEY]);
             cachedPlaylistItems = new Map(playlistArray);
-            console.log(`📦 Loaded ${cachedPlaylistItems.size} items from localStorage`);
         }
         
         if (result[LAST_PLAYLIST_KEY]) {
             lastPlaylistId = result[LAST_PLAYLIST_KEY];
-            console.log(`🎵 Last playlist ID: ${lastPlaylistId}`);
         }
     } catch (error) {
         console.error('❌ Error loading playlist from storage:', error);
@@ -35,9 +33,8 @@ async function savePlaylistToStorage() {
             [STORAGE_KEY]: JSON.stringify(playlistArray),
             [LAST_PLAYLIST_KEY]: lastPlaylistId
         });
-        console.log(`💾 Saved ${cachedPlaylistItems.size} items to localStorage`);
     } catch (error) {
-        console.error('❌ Error saving playlist to storage:', error);
+        console.error('Error saving playlist to storage:', error);
     }
 }
 
@@ -50,7 +47,7 @@ function connectWebSocket() {
         ws = new WebSocket('ws://localhost:8765');
 
         ws.onopen = () => {
-            console.log('✅ Connected to OBS WebSocket server');
+            console.log('Connected to OBS WebSocket server');
             isConnected = true;
             hasLoggedDisconnection = false;
             
@@ -70,7 +67,7 @@ function connectWebSocket() {
             ws = null;
             
             if (wasConnected && !hasLoggedDisconnection) {
-                console.log('🔌 Disconnected from OBS server, will retry every 5 seconds...');
+                console.log('Disconnected from OBS server, will retry every 5 seconds...');
                 hasLoggedDisconnection = true;
             }
             
@@ -81,7 +78,7 @@ function connectWebSocket() {
 
         ws.onerror = () => {
             if (isConnected) {
-                console.log('⚠️ WebSocket connection error');
+                console.log('WebSocket connection error');
             }
         };
 
@@ -90,29 +87,23 @@ function connectWebSocket() {
                 const message = JSON.parse(event.data);
                 
                 if (message.type === 'NAVIGATE_PLAYLIST') {
-                    console.log('Received NAVIGATE_PLAYLIST command:', message.data.direction);
-                    
                     chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
                         if (tabs && tabs.length > 0) {
                             tabs.forEach(tab => {
                                 chrome.tabs.sendMessage(tab.id, message, (response) => {
                                     if (chrome.runtime.lastError) {
-                                        console.log('Could not send to tab:', chrome.runtime.lastError.message);
                                     }
                                 });
                             });
                         }
                     });
                 } else if (message.type === 'PLAY_VIDEO') {
-                    console.log('Received PLAY_VIDEO command:', message.data);
-                    
                     chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
                         if (tabs && tabs.length > 0) {
                             const targetTab = tabs[0];
                             chrome.tabs.update(targetTab.id, { active: true }, () => {
                                 chrome.tabs.sendMessage(targetTab.id, message, (response) => {
                                     if (chrome.runtime.lastError) {
-                                        console.log('Could not send to tab:', chrome.runtime.lastError.message);
                                     }
                                 });
                             });
@@ -121,14 +112,11 @@ function connectWebSocket() {
                         }
                     });
                 } else if (message.type === 'LOAD_FULL_PLAYLIST') {
-                    console.log('Received LOAD_FULL_PLAYLIST command');
-                    
                     chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
                         if (tabs && tabs.length > 0) {
                             tabs.forEach(tab => {
                                 chrome.tabs.sendMessage(tab.id, message, (response) => {
                                     if (chrome.runtime.lastError) {
-                                        console.log('Could not send to tab:', chrome.runtime.lastError.message);
                                     } else if (response && response.playlist) {
                                         const mergedPlaylist = mergePlaylistData(response.playlist);
                                         if (mergedPlaylist && ws.readyState === WebSocket.OPEN) {
@@ -160,7 +148,6 @@ function mergePlaylistData(newPlaylist) {
     if (!newPlaylist || !newPlaylist.playlistId) return null;
     
     if (lastPlaylistId && lastPlaylistId !== newPlaylist.playlistId) {
-        console.log(`New playlist detected, clearing cache`);
         cachedPlaylistItems.clear();
     }
     lastPlaylistId = newPlaylist.playlistId;
@@ -187,11 +174,9 @@ function mergePlaylistData(newPlaylist) {
     if (currentItem) currentItem.isCurrent = true;
     
     if (newItemsAdded > 0) {
-        console.log(`Added ${newItemsAdded} new songs. Total cache: ${cachedForThisPlaylist.length}`);
         savePlaylistToStorage();
     }
-    console.log(`Background cache: ${cachedForThisPlaylist.length} songs`);
-    
+
     return {
         playlistId: newPlaylist.playlistId,
         items: cachedForThisPlaylist,
@@ -223,10 +208,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const tab = await chrome.tabs.get(activeInfo.tabId);
     if (tab.url && tab.url.includes('youtube.com')) {
-        console.log('YouTube tab activated, requesting update');
         chrome.tabs.sendMessage(tab.id, { type: 'REQUEST_UPDATE' }, (response) => {
             if (chrome.runtime.lastError) {
-                console.log('Tab not ready yet:', chrome.runtime.lastError.message);
             }
         });
     }

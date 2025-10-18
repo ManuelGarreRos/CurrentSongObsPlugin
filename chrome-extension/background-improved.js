@@ -16,15 +16,13 @@ async function loadPlaylistFromStorage() {
         if (result[STORAGE_KEY]) {
             const playlistArray = JSON.parse(result[STORAGE_KEY]);
             cachedPlaylistItems = new Map(playlistArray);
-            console.log(`📦 Loaded ${cachedPlaylistItems.size} items from localStorage`);
         }
         
         if (result[LAST_PLAYLIST_KEY]) {
             lastPlaylistId = result[LAST_PLAYLIST_KEY];
-            console.log(`🎵 Last playlist ID: ${lastPlaylistId}`);
         }
     } catch (error) {
-        console.error('❌ Error loading playlist from storage:', error);
+        console.error('Error loading playlist from storage:', error);
     }
 }
 
@@ -35,9 +33,8 @@ async function savePlaylistToStorage() {
             [STORAGE_KEY]: JSON.stringify(playlistArray),
             [LAST_PLAYLIST_KEY]: lastPlaylistId
         });
-        console.log(`💾 Saved ${cachedPlaylistItems.size} items to localStorage`);
     } catch (error) {
-        console.error('❌ Error saving playlist to storage:', error);
+        console.error('Error saving playlist to storage:', error);
     }
 }
 
@@ -50,7 +47,7 @@ function connectWebSocket() {
         ws = new WebSocket('ws://localhost:8765');
 
         ws.onopen = () => {
-            console.log('✅ Connected to OBS WebSocket server');
+            console.log('Connected to OBS WebSocket server');
             isConnected = true;
             hasLoggedDisconnection = false;
             
@@ -70,7 +67,7 @@ function connectWebSocket() {
             ws = null;
             
             if (wasConnected && !hasLoggedDisconnection) {
-                console.log('🔌 Disconnected from OBS server, will retry every 5 seconds...');
+                console.log('Disconnected from OBS server, will retry every 5 seconds...');
                 hasLoggedDisconnection = true;
             }
             
@@ -81,7 +78,7 @@ function connectWebSocket() {
 
         ws.onerror = () => {
             if (isConnected) {
-                console.log('⚠️ WebSocket connection error');
+                console.log('WebSocket connection error');
             }
         };
 

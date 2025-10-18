@@ -10,9 +10,6 @@ function getPlaylistStates() {
     const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
     const loopButton = document.querySelector('ytd-playlist-loop-button-renderer button[aria-label*="bucle"], ytd-playlist-loop-button-renderer button[aria-label*="loop"]');
     
-    console.log('🔍 Shuffle button:', shuffleButton);
-    console.log('🔍 Loop button:', loopButton);
-    
     const shuffleActive = shuffleButton?.getAttribute('aria-pressed') === 'true';
     
     let loopState = 'none';
@@ -21,10 +18,6 @@ function getPlaylistStates() {
         const title = loopButton.getAttribute('title') || '';
         const combinedText = (ariaLabel + ' ' + title).toLowerCase();
         
-        console.log('🔍 Loop button aria-label:', ariaLabel);
-        console.log('🔍 Loop button title:', title);
-        console.log('🔍 Combined text:', combinedText);
-        
         if (combinedText.includes('una vez') || combinedText.includes('loop one')) {
             loopState = 'one';
         } else if (combinedText.includes('activado') || combinedText.includes('on')) {
@@ -32,32 +25,24 @@ function getPlaylistStates() {
         }
     }
     
-    console.log('🎯 Detected states:', { shuffle: shuffleActive, loop: loopState });
     return { shuffle: shuffleActive, loop: loopState };
 }
 
 function savePlaylistStates() {
-    console.log('🔄 savePlaylistStates() called');
     const states = getPlaylistStates();
-    console.log('📊 Current states from getPlaylistStates():', states);
-    console.log('📊 Saved states in memory:', savedPlaylistStates);
     if (states.shuffle !== savedPlaylistStates.shuffle || states.loop !== savedPlaylistStates.loop) {
         savedPlaylistStates = states;
         savePlaylistStatesToStorage();
-        console.log('💾 Saved playlist states:', states);
     }
 }
 
 function restorePlaylistStates() {
     setTimeout(() => {
         const currentStates = getPlaylistStates();
-        console.log('🔍 Current states:', currentStates);
-        console.log('🔍 Saved states:', savedPlaylistStates);
-        
+
         if (savedPlaylistStates.shuffle !== currentStates.shuffle) {
             const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
             if (shuffleButton) {
-                console.log('🔀 Restoring shuffle state:', savedPlaylistStates.shuffle);
                 shuffleButton.click();
             }
         }
@@ -72,8 +57,7 @@ function restorePlaylistStates() {
                 };
                 
                 const clicks = clicksNeeded[currentStates.loop]?.[savedPlaylistStates.loop] || 0;
-                console.log('🔁 Restoring loop state:', savedPlaylistStates.loop, `(${clicks} clicks)`);
-                
+
                 for (let i = 0; i < clicks; i++) {
                     setTimeout(() => loopButton.click(), i * 100);
                 }
@@ -131,7 +115,6 @@ function init() {
     chrome.storage.local.get(['playlist_states'], (result) => {
         if (result.playlist_states) {
             savedPlaylistStates = result.playlist_states;
-            console.log('📦 Loaded saved playlist states:', savedPlaylistStates);
         }
     });
 }
@@ -146,7 +129,6 @@ document.addEventListener('visibilitychange', () => {
     isTabVisible = !document.hidden;
     
     if (isTabVisible) {
-        console.log('Tab became visible, resuming updates');
         if (!updateInterval) {
             init();
         } else {
@@ -166,36 +148,28 @@ if (document.readyState === 'loading') {
 window.addEventListener('load', init);
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Content script received message:', message);
-    
+
     if (message.type === 'REQUEST_UPDATE') {
         sendVideoInfo();
         sendResponse({success: true});
         return true;
     } else if (message.type === 'NAVIGATE_PLAYLIST') {
         const direction = message.data.direction;
-        console.log('Navigating playlist:', direction);
-        
+
         if (direction === 'next') {
             const nextButton = document.querySelector('.ytp-next-button');
-            console.log('Next button found:', !!nextButton);
             if (nextButton) {
                 nextButton.click();
-                console.log('Clicked next button');
                 sendResponse({success: true});
             } else {
-                console.log('Next button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         } else if (direction === 'prev') {
             const prevButton = document.querySelector('.ytp-prev-button');
-            console.log('Prev button found:', !!prevButton);
             if (prevButton) {
                 prevButton.click();
-                console.log('Clicked previous button');
                 sendResponse({success: true});
             } else {
-                console.log('Previous button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         }

@@ -11,8 +11,6 @@ const wss = new WebSocket.Server({ port: PORT });
 let currentVideoData = null;
 const clients = new Set();
 
-console.log(`WebSocket server started on ws://localhost:${PORT}`);
-
 wss.on('connection', (ws, req) => {
     const clientType = req.headers['user-agent']?.includes('Chrome') ? 'Browser Extension' : 'OBS Display';
     console.log(`Client connected: ${clientType}`);
@@ -27,11 +25,7 @@ wss.on('connection', (ws, req) => {
         try {
             const message = JSON.parse(data.toString());
             if (message.type === 'NAVIGATE_PLAYLIST') {
-                console.log(`Playlist navigation: ${message.data.direction}`);
-            } else if (message.type === 'LOAD_FULL_PLAYLIST') {
-                console.log(`Request to load full playlist`);
             } else {
-                console.log(`Video update: ${message.title || 'Stopped'}`);
                 currentVideoData = message;
             }
 

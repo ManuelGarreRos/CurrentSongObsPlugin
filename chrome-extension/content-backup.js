@@ -86,8 +86,6 @@ function getPlaylistInfo() {
         }
     });
     
-    console.log(`👀 Visible in DOM: ${items.length} items (indices ${minIndex === Infinity ? '?' : minIndex+1} to ${maxIndex === -Infinity ? '?' : maxIndex+1})`);
-    
     return {
         playlistId: playlistId,
         items: items,

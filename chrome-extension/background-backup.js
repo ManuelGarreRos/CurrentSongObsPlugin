@@ -15,7 +15,6 @@ function connectWebSocket() {
         ws = new WebSocket('ws://localhost:8765');
 
         ws.onopen = () => {
-            console.log('✅ Connected to OBS WebSocket server');
             isConnected = true;
             hasLoggedDisconnection = false;
             
@@ -35,7 +34,6 @@ function connectWebSocket() {
             ws = null;
             
             if (wasConnected && !hasLoggedDisconnection) {
-                console.log('🔌 Disconnected from OBS server, will retry...');
                 hasLoggedDisconnection = true;
             }
             
@@ -46,7 +44,7 @@ function connectWebSocket() {
 
         ws.onerror = () => {
             if (isConnected) {
-                console.log('⚠️ WebSocket connection error');
+                console.log('WebSocket connection error');
             }
         };
 
@@ -55,8 +53,6 @@ function connectWebSocket() {
                 const message = JSON.parse(event.data);
                 
                 if (message.type === 'NAVIGATE_PLAYLIST') {
-                    console.log('Received NAVIGATE_PLAYLIST command:', message.data.direction);
-                    
                     chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
                         if (tabs && tabs.length > 0) {
                             tabs.forEach(tab => {
@@ -69,8 +65,6 @@ function connectWebSocket() {
                         }
                     });
                 } else if (message.type === 'PLAY_VIDEO') {
-                    console.log('Received PLAY_VIDEO command:', message.data);
-                    
                     chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
                         if (tabs && tabs.length > 0) {
                             tabs.forEach(tab => {
@@ -83,8 +77,6 @@ function connectWebSocket() {
                         }
                     });
                 } else if (message.type === 'LOAD_FULL_PLAYLIST') {
-                    console.log('Received LOAD_FULL_PLAYLIST command');
-                    
                     chrome.tabs.query({url: "*://*.youtube.com/*"}, (tabs) => {
                         if (tabs && tabs.length > 0) {
                             tabs.forEach(tab => {
@@ -122,7 +114,6 @@ function mergePlaylistData(newPlaylist) {
     if (!newPlaylist || !newPlaylist.playlistId) return null;
     
     if (lastPlaylistId && lastPlaylistId !== newPlaylist.playlistId) {
-        console.log(`New playlist detected, clearing cache`);
         cachedPlaylistItems.clear();
     }
     lastPlaylistId = newPlaylist.playlistId;
@@ -151,8 +142,7 @@ function mergePlaylistData(newPlaylist) {
     if (newItemsAdded > 0) {
         console.log(`Added ${newItemsAdded} new songs. Total cache: ${cachedForThisPlaylist.length}`);
     }
-    console.log(`Background cache: ${cachedForThisPlaylist.length} songs`);
-    
+
     return {
         playlistId: newPlaylist.playlistId,
         items: cachedForThisPlaylist,

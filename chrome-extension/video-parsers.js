@@ -83,8 +83,6 @@ function getPlaylistInfo() {
         }
     });
     
-    console.log(`👀 Visible in DOM: ${items.length} items (indices ${minIndex === Infinity ? '?' : minIndex+1} to ${maxIndex === -Infinity ? '?' : maxIndex+1})`);
-    
     return {
         playlistId: playlistId,
         items: items,
@@ -96,7 +94,6 @@ function extractMusicMetadataFromDescription() {
     try {
         const descriptionContainer = document.querySelector('ytd-watch-metadata #description-inline-expander');
         if (!descriptionContainer) {
-            console.log('📝 No description container found');
             return null;
         }
 
@@ -104,15 +101,10 @@ function extractMusicMetadataFromDescription() {
         
         const musicSection = descriptionContainer.querySelector('ytd-structured-description-content-renderer');
         if (musicSection) {
-            console.log('🎵 Found music section in description');
-            
             const musicCarousel = musicSection.querySelector('ytd-horizontal-card-list-renderer');
             if (musicCarousel) {
-                console.log('🔍 Found music carousel');
-                
                 const videoAttributeCard = musicCarousel.querySelector('yt-video-attribute-view-model');
                 if (videoAttributeCard) {
-                    console.log('🔍 Found video attribute view model');
                     const titleEl = videoAttributeCard.querySelector('h1.yt-video-attribute-view-model__title');
                     const subtitleEl = videoAttributeCard.querySelector('h4.yt-video-attribute-view-model__subtitle');
                     const secondarySubtitle = videoAttributeCard.querySelector('.yt-video-attribute-view-model__secondary-subtitle .yt-core-attributed-string');
@@ -155,16 +147,8 @@ function extractMusicMetadataFromDescription() {
                             }
                         }
                     }
-                    
-                    console.log('🔍 Debug: Found video attribute card:', {
-                        songTitle,
-                        artist,
-                        album,
-                        hasAlbumCover: !!albumCover
-                    });
-                    
+
                     if (songTitle && artist) {
-                        console.log('✅ Music metadata extracted successfully from video attribute card');
                         return {
                             songTitle: songTitle,
                             artist: artist,
@@ -178,7 +162,6 @@ function extractMusicMetadataFromDescription() {
                 
                 const firstCard = musicCarousel.querySelector('ytd-compact-station-renderer');
                 if (firstCard) {
-                    console.log('🔍 Found compact station card');
                     const songLink = firstCard.querySelector('#video-title');
                     const metadata = firstCard.querySelectorAll('yt-formatted-string.ytd-compact-station-renderer');
                     const albumCoverImg = firstCard.querySelector('img');
@@ -199,16 +182,8 @@ function extractMusicMetadataFromDescription() {
                     }
                     
                     const albumCover = albumCoverImg ? albumCoverImg.src : null;
-                    
-                    console.log('🔍 Debug: Found music card:', {
-                        songTitle,
-                        artist,
-                        album,
-                        hasAlbumCover: !!albumCover
-                    });
-                    
+
                     if (songTitle && artist) {
-                        console.log('✅ Music metadata extracted successfully from card');
                         return {
                             songTitle: songTitle,
                             artist: artist,
@@ -222,7 +197,6 @@ function extractMusicMetadataFromDescription() {
                 
                 const lockupCard = musicCarousel.querySelector('ytd-lockup-view-model');
                 if (lockupCard) {
-                    console.log('🔍 Found lockup view model card');
                     const contentNode = lockupCard.querySelector('yt-lockup-metadata-view-model');
                     if (contentNode) {
                         const titleEl = contentNode.querySelector('h3');
@@ -245,16 +219,9 @@ function extractMusicMetadataFromDescription() {
                         }
                         
                         const albumCover = albumCoverImg ? albumCoverImg.src : null;
-                        
-                        console.log('🔍 Debug: Found lockup card:', {
-                            songTitle,
-                            artist,
-                            album,
-                            hasAlbumCover: !!albumCover
-                        });
+
                         
                         if (songTitle && artist) {
-                            console.log('✅ Music metadata extracted successfully from lockup');
                             return {
                                 songTitle: songTitle,
                                 artist: artist,
@@ -272,12 +239,7 @@ function extractMusicMetadataFromDescription() {
             const allTextElements = musicSection.querySelectorAll('yt-formatted-string');
             const textArray = Array.from(allTextElements).map(el => el.textContent.trim());
             
-            console.log('🔍 Debug: Text elements found:', {
-                count: textArray.length,
-                elements: textArray
-            });
-            
-            const filteredText = textArray.filter(text => 
+            const filteredText = textArray.filter(text =>
                 text.length > 0 && 
                 !text.match(/^Música$/i) && 
                 !text.match(/^Music$/i) &&
@@ -286,8 +248,7 @@ function extractMusicMetadataFromDescription() {
                 !text.match(/^[\d,\.]+\s*K?\s*Shorts$/i)
             );
             
-            console.log('🔍 Debug: Filtered elements:', filteredText);
-            
+
             let songTitle = null;
             let artist = null;
             let album = null;
@@ -320,10 +281,8 @@ function extractMusicMetadataFromDescription() {
             const albumCoverImg = musicSection.querySelector('img');
             const albumCover = albumCoverImg ? albumCoverImg.src : null;
             
-            console.log('🔍 Extracted:', { songTitle, artist, album, albumCover: albumCover?.substring(0, 50) });
-            
+
             if (songTitle && artist) {
-                console.log('✅ Music metadata extracted successfully');
                 return {
                     songTitle: songTitle,
                     artist: artist,
@@ -333,7 +292,6 @@ function extractMusicMetadataFromDescription() {
                     isComplete: true
                 };
             } else {
-                console.log('⚠️ Music section found but incomplete - missing songTitle or artist');
                 return null;
             }
         }
@@ -351,8 +309,7 @@ function extractMusicMetadataFromDescription() {
                 line.length > 0
             );
             
-            console.log('🔍 Debug: Lines after "Música":', validLines.slice(0, 5));
-            
+
             if (validLines.length >= 2) {
                 const potentialSong = validLines[0];
                 const potentialArtist = validLines[1];
@@ -372,13 +329,7 @@ function extractMusicMetadataFromDescription() {
                     const albumCoverImg = musicSection?.querySelector('img');
                     const albumCover = albumCoverImg ? albumCoverImg.src : null;
                     
-                    console.log('✅ Music metadata extracted from description lines:', {
-                        songTitle: potentialSong,
-                        artist: potentialArtist,
-                        album,
-                        albumCover: albumCover?.substring(0, 50)
-                    });
-                    
+
                     return {
                         songTitle: potentialSong,
                         artist: potentialArtist,
@@ -402,15 +353,13 @@ function extractMusicMetadataFromDescription() {
         }
         
         if (metadata.songTitle && metadata.artist) {
-            console.log('✅ Music metadata extracted via regex:', metadata);
             return { ...metadata, source: 'description-regex', isComplete: true };
         }
         
     } catch (error) {
-        console.log('❌ Error extracting music metadata:', error);
+        console.log('Error extracting music metadata:', error);
     }
     
-    console.log('📝 No music metadata found in description, will use title parsing');
     return null;
 }
 
@@ -451,9 +400,8 @@ function getYouTubeVideoInfo() {
         album = descriptionMetadata.album || null;
         albumCover = descriptionMetadata.albumCover || null;
         metadataSource = descriptionMetadata.source;
-        console.log(`✅ Using ${metadataSource} metadata`);
     } else {
-        console.log('📝 Using title parsing fallback');
+        console.log('Using title parsing fallback');
     }
 
     const playlist = getPlaylistInfo();

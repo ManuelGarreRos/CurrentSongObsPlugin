@@ -104,11 +104,9 @@ function startCrossfade(videoThumbnail, albumCover) {
         if (showingAlbumCover) {
             thumbnail.classList.remove('fade-out');
             albumCoverEl.classList.remove('fade-in');
-            console.log('🖼️ Showing video thumbnail');
         } else {
             thumbnail.classList.add('fade-out');
             albumCoverEl.classList.add('fade-in');
-            console.log('💿 Showing album cover');
         }
         showingAlbumCover = !showingAlbumCover;
     }, 15000);
@@ -148,7 +146,7 @@ function updateDisplay(data) {
     }
     
     if (data.metadataSource) {
-        console.log(`📊 Using metadata from: ${data.metadataSource}`);
+        console.log(`Using metadata from: ${data.metadataSource}`);
     }
     
     title.textContent = displayTitle;
@@ -157,7 +155,6 @@ function updateDisplay(data) {
     if (data.album) {
         album.textContent = `💿 ${data.album}`;
         album.classList.add('show');
-        console.log(`💿 Album: ${data.album}`);
     } else {
         album.textContent = '';
         album.classList.remove('show');
@@ -211,7 +208,6 @@ function updatePlaylist(playlist) {
     playlistCount.textContent = playlist.count;
 
     if (playlistChanged) {
-        console.log(`📋 Playlist updated: ${playlist.count} songs`);
         const searchInput = document.getElementById('playlistSearch');
         renderPlaylistItems(searchInput ? searchInput.value : '');
     }
@@ -293,7 +289,7 @@ function playVideo(item) {
 }
 
 ws.onopen = () => {
-    console.log('✅ Connected to WebSocket server');
+    console.log('Connected to WebSocket server');
     isConnected = true;
     statusIndicator.classList.remove('disconnected');
     connectionStatus.textContent = 'Connected';
@@ -315,7 +311,7 @@ ws.onmessage = (event) => {
 
 ws.onclose = () => {
     if (isConnected) {
-        console.log('🔌 Disconnected from server, reloading in 5 seconds...');
+        console.log('Disconnected from server, reloading in 5 seconds...');
     }
     isConnected = false;
     statusIndicator.classList.add('disconnected');

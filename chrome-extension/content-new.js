@@ -54,21 +54,14 @@ if (document.readyState === 'loading') {
 window.addEventListener('load', init);
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Content script received message:', message);
-    
     if (message.type === 'NAVIGATE_PLAYLIST') {
         const direction = message.data.direction;
-        console.log('Navigating playlist:', direction);
-        
         if (direction === 'next') {
             const nextButton = document.querySelector('.ytp-next-button');
-            console.log('Next button found:', !!nextButton);
             if (nextButton) {
                 nextButton.click();
-                console.log('Clicked next button');
                 sendResponse({success: true});
             } else {
-                console.log('Next button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         } else if (direction === 'prev') {
