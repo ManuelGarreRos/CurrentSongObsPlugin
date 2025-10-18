@@ -4,6 +4,10 @@
 
 Display currently playing videos from YouTube, Vimeo, Twitch, and other platforms directly in OBS Studio with a beautiful animated interface. Perfect for streamers who want to share what they're watching with their audience.
 
+<p align="center">
+  <img src="./Assets/img.png" alt="Preview"/>
+</p>
+
 ## Features
 
 ### Core Features
