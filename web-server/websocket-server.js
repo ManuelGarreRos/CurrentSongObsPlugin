@@ -24,12 +24,8 @@ wss.on('connection', (ws, req) => {
     }
 
     ws.on('message', (data) => {
-        console.log(`Message received from ${clientType}`);
-        console.log(`Raw data: ${data}`);
         try {
             const message = JSON.parse(data.toString());
-            console.log(`Received message from ${clientType}:`, message);
-            
             if (message.type === 'NAVIGATE_PLAYLIST') {
                 console.log(`Playlist navigation: ${message.data.direction}`);
             } else if (message.type === 'LOAD_FULL_PLAYLIST') {
