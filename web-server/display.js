@@ -354,7 +354,8 @@ const defaultConfig = {
         fontFamily: 'modern',
         crossfadeSpeed: 'normal',
         cornerRadius: 50,
-        vinylLook: true
+        vinylLook: true,
+        rotatingEffect: true
     },
     customCSS: ''
 };
@@ -569,7 +570,8 @@ function updateDisplayConfig() {
         fontFamily: document.getElementById('fontFamily').value,
         crossfadeSpeed: document.getElementById('crossfadeSpeed').value,
         cornerRadius: parseInt(document.getElementById('cornerRadius').value),
-        vinylLook: document.getElementById('vinylLook').checked
+        vinylLook: document.getElementById('vinylLook').checked,
+        rotatingEffect: document.getElementById('rotatingEffect').checked
     };
     
     saveConfig();
@@ -616,6 +618,14 @@ function applyDisplay() {
             thumbnailContainer.classList.remove('vinyl-effect');
         }
     }
+    
+    if (thumbnailWrapper) {
+        if (d.rotatingEffect) {
+            thumbnailWrapper.classList.add('rotating');
+        } else {
+            thumbnailWrapper.classList.remove('rotating');
+        }
+    }
 }
 
 function updateCornerRadius(value) {
@@ -660,6 +670,7 @@ function loadConfigToUI() {
     document.getElementById('cornerRadius').value = currentConfig.display.cornerRadius;
     document.getElementById('cornerRadiusValue').textContent = currentConfig.display.cornerRadius;
     document.getElementById('vinylLook').checked = currentConfig.display.vinylLook;
+    document.getElementById('rotatingEffect').checked = currentConfig.display.rotatingEffect;
     
     document.getElementById('customCSS').value = currentConfig.customCSS;
     

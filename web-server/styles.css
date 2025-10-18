@@ -59,6 +59,9 @@ body {
     height: 100%;
     border-radius: 50%;
     overflow: hidden;
+}
+
+.thumbnail-wrapper.rotating {
     animation: rotate-thumbnail 20s linear infinite;
 }
 
