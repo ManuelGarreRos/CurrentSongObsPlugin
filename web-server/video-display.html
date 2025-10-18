@@ -99,6 +99,7 @@
                 <button class="tab-btn" onclick="switchTab('visibility')">Visibility</button>
                 <button class="tab-btn" onclick="switchTab('display')">Display</button>
                 <button class="tab-btn" onclick="switchTab('advanced')">Advanced</button>
+                <button class="tab-btn" onclick="switchTab('about')">About</button>
             </div>
             
             <div class="config-body">
@@ -237,6 +238,41 @@
                     
                     <h3 style="margin-top: 20px;">Custom CSS</h3>
                     <textarea id="customCSS" placeholder="Enter custom CSS here..." oninput="updateCustomCSS()"></textarea>
+                </div>
+                
+                <div class="tab-content" id="aboutTab">
+                    <div class="about-container">
+                        <h3>YoutubeMediaDisplay</h3>
+                        <p class="about-description">Real-time video information display for OBS Studio</p>
+                        
+                        <div class="about-section">
+                            <h4>👨‍💻 Creator</h4>
+                            <p class="about-name">Manuel Garre Ros</p>
+                            <p class="about-brand">MGRDesarrollo</p>
+                        </div>
+                        
+                        <div class="about-section">
+                            <h4>📧 Contact</h4>
+                            <a href="mailto:mgrdesarrollo@gmail.com" class="about-link" target="_blank">
+                                mgrdesarrollo@gmail.com
+                            </a>
+                        </div>
+                        
+                        <div class="about-section">
+                            <h4>🔗 Links</h4>
+                            <a href="https://github.com/ManuelGarreRos" class="about-link" target="_blank">
+                                <span class="link-icon">🐙</span> GitHub
+                            </a>
+                            <a href="https://www.linkedin.com/in/manuel-garre-ros-10a06412a/" class="about-link" target="_blank">
+                                <span class="link-icon">💼</span> LinkedIn
+                            </a>
+                        </div>
+                        
+                        <div class="about-footer">
+                            <p>Made with ❤️ for the streaming community</p>
+                            <p class="about-version">v1.3.0</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
