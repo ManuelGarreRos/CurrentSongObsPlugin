@@ -61,7 +61,20 @@ wss.on('connection', (ws, req) => {
 });
 
 const server = http.createServer((req, res) => {
-    const filePath = path.join(__dirname, 'video-display.html');
+    let filePath = path.join(__dirname, req.url === '/' ? 'video-display.html' : req.url);
+    
+    const extname = path.extname(filePath);
+    const contentTypes = {
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'text/javascript',
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.gif': 'image/gif'
+    };
+    
+    const contentType = contentTypes[extname] || 'text/plain';
     
     fs.readFile(filePath, (err, content) => {
         if (err) {
@@ -71,7 +84,7 @@ const server = http.createServer((req, res) => {
         }
 
         res.writeHead(200, { 
-            'Content-Type': 'text/html',
+            'Content-Type': contentType,
             'Access-Control-Allow-Origin': '*'
         });
         res.end(content);

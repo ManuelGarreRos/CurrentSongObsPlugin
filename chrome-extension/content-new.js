@@ -1,6 +1,5 @@
 let currentVideoData = null;
 let updateInterval = null;
-let isTabVisible = !document.hidden;
 
 function sendVideoInfo() {
     const videoData = getVideoInfo();
@@ -46,21 +45,6 @@ function init() {
     sendVideoInfo();
 }
 
-document.addEventListener('visibilitychange', () => {
-    isTabVisible = !document.hidden;
-    
-    if (isTabVisible) {
-        console.log('Tab became visible, resuming updates');
-        if (!updateInterval) {
-            init();
-        } else {
-            sendVideoInfo();
-        }
-    } else {
-        console.log('Tab hidden, continuing updates in background');
-    }
-});
-
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
@@ -72,11 +56,7 @@ window.addEventListener('load', init);
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('Content script received message:', message);
     
-    if (message.type === 'REQUEST_UPDATE') {
-        sendVideoInfo();
-        sendResponse({success: true});
-        return true;
-    } else if (message.type === 'NAVIGATE_PLAYLIST') {
+    if (message.type === 'NAVIGATE_PLAYLIST') {
         const direction = message.data.direction;
         console.log('Navigating playlist:', direction);
         
