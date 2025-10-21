@@ -55,6 +55,7 @@ Browser Video → Chrome Extension → WebSocket Server → OBS Browser Source
 1. **Chrome Extension** (`chrome-extension/`) - Monitors video playback and sends data
 2. **WebSocket Server** (`web-server/`) - Relays messages between extension and OBS
 3. **OBS Browser Source** - Displays video information with animated UI
+4. **Firefox Extension** - (Testing) Future support for Firefox browsers
 
 ## Quick Start
 
@@ -85,11 +86,13 @@ Browser Video → Chrome Extension → WebSocket Server → OBS Browser Source
    - Enable "Developer mode"
    - Click "Load unpacked"
    - Select the `chrome-extension` folder
+   - If you want to try the Firefox extension, follow similar steps in `about:debugging#/runtime/this-firefox`
+   - Load temporal extension from `chrome-extension/firefox-extension/manifest.json`
 
 4. **Add Browser Source in OBS:**
    - Add new Browser Source
    - URL: `http://localhost:8008`
-   - Width: `400`, Height: `340`
+   - Width: `400`, Height: `340` (adjust as needed)
    - Check "Shutdown source when not visible"
 
 5. **Test it:**
