@@ -1,0 +1,53 @@
+{
+  "manifest_version": 2,
+  "name": "Current Video for OBS",
+  "version": "1.1.0",
+  "description": "Sends currently playing video information to OBS Studio",
+  "permissions": [
+    "tabs",
+    "storage",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://vimeo.com/*",
+    "https://www.twitch.tv/*",
+    "https://dailymotion.com/*",
+    "*://*/*"
+  ],
+  "background": {
+    "scripts": ["browser-polyfill.js", "background-improved.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://vimeo.com/*",
+        "https://www.twitch.tv/*",
+        "https://dailymotion.com/*",
+        "*://*/*"
+      ],
+      "js": ["video-parsers.js", "content-improved.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "current-video-for-obs@mgrdesarrollo.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}

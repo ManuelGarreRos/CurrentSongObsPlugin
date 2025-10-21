@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Current Video for OBS",
+  "version": "1.0.0",
+  "description": "Sends currently playing video information to OBS Studio",
+  "permissions": [
+    "tabs",
+    "storage",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://vimeo.com/*",
+    "https://www.twitch.tv/*",
+    "https://dailymotion.com/*",
+    "*://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://vimeo.com/*",
+        "https://www.twitch.tv/*",
+        "https://dailymotion.com/*",
+        "*://*/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
