@@ -49,6 +49,97 @@ function parseSongInfo(rawTitle) {
     return { songTitle, artist };
 }
 
+/**
+ * Check if a text string is noise/garbage that should not be treated as music metadata.
+ * Returns true for empty strings, pure numbers, section headers, shop text, etc.
+ */
+function isNoiseText(text) {
+    if (!text || typeof text !== 'string') return true;
+    const trimmed = text.trim();
+    if (trimmed.length === 0) return true;
+    
+    // Pure numbers
+    if (/^\d+$/.test(trimmed)) return true;
+    
+    // Section headers (Music / Música in various languages)
+    if (/^(music|m[uú]sica)$/i.test(trimmed)) return true;
+    
+    // Numbered track patterns — with accent fix: canción, canciones, song, songs, track, tracks, tema, temas
+    if (/^\d+\s+(canc[iíó]ón?|song|track|tema)s?$/i.test(trimmed)) return true;
+    
+    // YouTube Shorts patterns
+    if (/^(shorts|[\d,.]+\s*k?\s*shorts)$/i.test(trimmed)) return true;
+    
+    // Pure symbols / punctuation only
+    if (/^[\s•·\-–—_|★☆♪♫♬🎵🎶▶️]+$/.test(trimmed)) return true;
+    
+    // Product / shopping text (Spanish / English)
+    if (/^(bu(y|s) (now|here)|link (in (description|bio)|en la descripci[óo]n)|sponsored|ad|promo(ci[óo]n)?|available\s+at|compra\s+ahora|enlace|lleva (a|al) (mercadillo|producto)|m[aá]s\s+informaci[óo]n|etiquetado|productos|aparecen\s+m[aá]s\s+abajo|mira\s+los\s+productos)$/i.test(trimmed)) return true;
+    
+    // Embedded product indicators — text containing 2+ shop-related words is likely product noise
+    const shopWordCount = (trimmed.match(/\b(etiquetado|productos?|compra|shop(ping)?|sponsored|ad|promo|c[óo]mpral[oa]|enlace|informaci[óo]n|aparecen|abajo|tagged|products?)\b/i) || []).length;
+    if (shopWordCount >= 2 && trimmed.length > 60) return true;
+    
+    // Unreasonably long text — song titles are rarely > 150 chars
+    if (trimmed.length > 200) return true;
+    
+    return false;
+}
+
+/**
+ * Validate that extracted music metadata looks like real song/artist data.
+ * Prevents garbage from overriding correct title-parsed values.
+ */
+function isValidMusicMetadata(data) {
+    if (!data) return false;
+    if (data.songTitle == null || data.artist == null) return false;
+    if (typeof data.songTitle !== 'string' || typeof data.artist !== 'string') return false;
+    
+    const title = data.songTitle.trim();
+    const artist = data.artist.trim();
+    
+    if (title.length === 0 || artist.length === 0) return false;
+    if (isNoiseText(title) || isNoiseText(artist)) return false;
+    
+    // Must contain at least one Unicode letter character (supports all scripts: Latin, Hangul, Kana, etc.)
+    if (!/\p{L}/u.test(title) || !/\p{L}/u.test(artist)) return false;
+    
+    return true;
+}
+
+/**
+ * Try to get music metadata from the browser's Media Session API.
+ * This is set natively by YouTube/YouTube Music and is the most reliable source.
+ * No DOM dependency — works even if YouTube changes their page structure.
+ */
+function getMediaSessionMetadata() {
+    try {
+        if (navigator.mediaSession && navigator.mediaSession.metadata) {
+            const metadata = navigator.mediaSession.metadata;
+            const title = metadata.title || null;
+            const artist = metadata.artist || null;
+            
+            if (title && artist) {
+                const result = {
+                    songTitle: title.trim(),
+                    artist: artist.trim(),
+                    album: metadata.album ? metadata.album.trim() : null,
+                    albumCover: null,
+                    source: 'mediasession',
+                    isComplete: true
+                };
+                
+                if (isValidMusicMetadata(result)) {
+                    return result;
+                }
+            }
+        }
+    } catch (e) {
+        // MediaSession API not available — silently continue
+    }
+    return null;
+}
+
 function getPlaylistInfo() {
     const urlParams = new URLSearchParams(window.location.search);
     const playlistId = urlParams.get('list');
@@ -236,16 +327,15 @@ function extractMusicMetadataFromDescription() {
             }
             
             const musicLink = musicSection.querySelector('a[href*="music.youtube.com"]');
-            const allTextElements = musicSection.querySelectorAll('yt-formatted-string');
+            
+            // Direct children of the music section may include product/shopping text.
+            // Scope text extraction to the horizontal card list if available.
+            const textScope = musicCarousel || musicSection;
+            const allTextElements = textScope.querySelectorAll('yt-formatted-string');
             const textArray = Array.from(allTextElements).map(el => el.textContent.trim());
             
             const filteredText = textArray.filter(text =>
-                text.length > 0 && 
-                !text.match(/^Música$/i) && 
-                !text.match(/^Music$/i) &&
-                !text.match(/^\d+\s+(cancion|song|track)/i) &&
-                !text.match(/^Shorts/i) &&
-                !text.match(/^[\d,\.]+\s*K?\s*Shorts$/i)
+                text.length > 0 && !isNoiseText(text)
             );
             
 
@@ -254,7 +344,10 @@ function extractMusicMetadataFromDescription() {
             let album = null;
             
             if (musicLink) {
-                songTitle = musicLink.textContent.trim();
+                const linkText = musicLink.textContent.trim();
+                if (!isNoiseText(linkText)) {
+                    songTitle = linkText;
+                }
             }
             
             if (!songTitle && filteredText.length > 0) {
@@ -262,12 +355,15 @@ function extractMusicMetadataFromDescription() {
             }
             
             if (filteredText.length > 1) {
-                artist = filteredText[1];
+                const potentialArtist = filteredText[1];
+                if (!isNoiseText(potentialArtist)) {
+                    artist = potentialArtist;
+                }
             }
             
             if (filteredText.length > 2) {
                 const possibleAlbum = filteredText[2];
-                if (possibleAlbum && possibleAlbum.length > 0) {
+                if (possibleAlbum && possibleAlbum.length > 0 && !isNoiseText(possibleAlbum)) {
                     album = possibleAlbum
                         .replace(/^\[/, '')
                         .replace(/\]$/, '')
@@ -303,10 +399,7 @@ function extractMusicMetadataFromDescription() {
             const afterMusica = lines.slice(musicaIndex + 1);
             
             const validLines = afterMusica.filter(line => 
-                !line.match(/^\d+\s+(cancion|song|track)/i) &&
-                !line.match(/^Shorts/i) &&
-                !line.match(/^[\d,\.]+\s*K?\s*Shorts$/i) &&
-                line.length > 0
+                line.length > 0 && !isNoiseText(line)
             );
             
 
@@ -393,15 +486,40 @@ function getYouTubeVideoInfo() {
         }
     }
     
-    const descriptionMetadata = extractMusicMetadataFromDescription();
-    if (descriptionMetadata && descriptionMetadata.isComplete) {
-        songTitle = descriptionMetadata.songTitle;
-        artist = descriptionMetadata.artist;
-        album = descriptionMetadata.album || null;
-        albumCover = descriptionMetadata.albumCover || null;
-        metadataSource = descriptionMetadata.source;
+    // Priority 1: navigator.mediaSession.metadata (most reliable, no DOM dependency)
+    const mediaSessionMetadata = getMediaSessionMetadata();
+    if (mediaSessionMetadata && isValidMusicMetadata(mediaSessionMetadata)) {
+        songTitle = mediaSessionMetadata.songTitle;
+        artist = mediaSessionMetadata.artist;
+        album = mediaSessionMetadata.album || null;
+        albumCover = mediaSessionMetadata.albumCover || null;
+        metadataSource = 'mediasession';
+        console.log(`MediaSession metadata: "${songTitle}" by "${artist}"` + (album ? ` (${album})` : ''));
     } else {
-        console.log('Using title parsing fallback');
+        // Priority 2: Description DOM scraping (with validation)
+        const descriptionMetadata = extractMusicMetadataFromDescription();
+        if (descriptionMetadata && descriptionMetadata.isComplete) {
+            if (isValidMusicMetadata(descriptionMetadata)) {
+                songTitle = descriptionMetadata.songTitle;
+                artist = descriptionMetadata.artist;
+                album = descriptionMetadata.album || null;
+                albumCover = descriptionMetadata.albumCover || null;
+                metadataSource = descriptionMetadata.source;
+                console.log(`Description metadata: "${songTitle}" by "${artist}"` + (album ? ` (${album})` : '') + ` [source: ${metadataSource}]`);
+            } else {
+                console.log(`Description metadata REJECTED (invalid): "${descriptionMetadata.songTitle}" / "${descriptionMetadata.artist}" — falling back to title parsing`);
+            }
+        } else {
+            console.log('No description metadata found, using title parsing');
+        }
+    }
+
+    // Final safety net: if song/artist still look like garbage, fall back to raw title
+    if (!songTitle || !artist || songTitle.length === 0 || artist.length === 0 || isNoiseText(songTitle) || isNoiseText(artist)) {
+        console.log(`Final validation rejected: "${songTitle}" / "${artist}" — using raw title`);
+        songTitle = rawTitle;
+        artist = '';
+        metadataSource = 'raw-title';
     }
 
     const playlist = getPlaylistInfo();

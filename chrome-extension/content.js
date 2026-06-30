@@ -29,6 +29,10 @@ function getPlaylistStates() {
 }
 
 function savePlaylistStates() {
+    if (isRestoring) {
+        return;
+    }
+    
     const states = getPlaylistStates();
     if (states.shuffle !== savedPlaylistStates.shuffle || states.loop !== savedPlaylistStates.loop) {
         savedPlaylistStates = states;
@@ -36,10 +40,13 @@ function savePlaylistStates() {
     }
 }
 
+let isRestoring = false;
+
 function restorePlaylistStates() {
+    isRestoring = true;
     setTimeout(() => {
         const currentStates = getPlaylistStates();
-
+        
         if (savedPlaylistStates.shuffle !== currentStates.shuffle) {
             const shuffleButton = document.querySelector('ytd-toggle-button-renderer button[aria-label*="aleatoria"], ytd-toggle-button-renderer button[aria-label*="Shuffle"]');
             if (shuffleButton) {
@@ -57,13 +64,23 @@ function restorePlaylistStates() {
                 };
                 
                 const clicks = clicksNeeded[currentStates.loop]?.[savedPlaylistStates.loop] || 0;
-
+                
                 for (let i = 0; i < clicks; i++) {
                     setTimeout(() => loopButton.click(), i * 100);
                 }
             }
         }
-    }, 1000);
+        
+        setTimeout(() => {
+            isRestoring = false;
+        }, 500);
+    }, 3000);
+}
+
+function savePlaylistStatesToStorage() {
+    chrome.storage.local.set({
+        playlist_states: savedPlaylistStates
+    });
 }
 
 function sendVideoInfo() {
@@ -115,13 +132,12 @@ function init() {
     chrome.storage.local.get(['playlist_states'], (result) => {
         if (result.playlist_states) {
             savedPlaylistStates = result.playlist_states;
+            
+            const url = location.href;
+            if (url.includes('&list=') || url.includes('?list=')) {
+                restorePlaylistStates();
+            }
         }
-    });
-}
-
-function savePlaylistStatesToStorage() {
-    chrome.storage.local.set({
-        playlist_states: savedPlaylistStates
     });
 }
 
@@ -129,6 +145,7 @@ document.addEventListener('visibilitychange', () => {
     isTabVisible = !document.hidden;
     
     if (isTabVisible) {
+        console.log('Tab became visible, resuming updates');
         if (!updateInterval) {
             init();
         } else {
@@ -139,37 +156,61 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+let lastUrl = location.href;
+function startUrlMonitoring() {
+    setInterval(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            if (url.includes('&list=') || url.includes('?list=')) {
+                restorePlaylistStates();
+            }
+        }
+    }, 500);
+}
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
 }
 
-window.addEventListener('load', init);
+window.addEventListener('load', () => {
+    init();
+    startUrlMonitoring();
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-
+    console.log('Content script received message:', message);
+    
     if (message.type === 'REQUEST_UPDATE') {
         sendVideoInfo();
         sendResponse({success: true});
         return true;
     } else if (message.type === 'NAVIGATE_PLAYLIST') {
         const direction = message.data.direction;
-
+        console.log('Navigating playlist:', direction);
+        
         if (direction === 'next') {
             const nextButton = document.querySelector('.ytp-next-button');
+            console.log('Next button found:', !!nextButton);
             if (nextButton) {
                 nextButton.click();
+                console.log('Clicked next button');
                 sendResponse({success: true});
             } else {
+                console.log('Next button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         } else if (direction === 'prev') {
             const prevButton = document.querySelector('.ytp-prev-button');
+            console.log('Prev button found:', !!prevButton);
             if (prevButton) {
                 prevButton.click();
+                console.log('Clicked previous button');
                 sendResponse({success: true});
             } else {
+                console.log('Previous button not found');
                 sendResponse({success: false, error: 'Button not found'});
             }
         }
